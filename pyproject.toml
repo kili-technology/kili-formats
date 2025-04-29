@@ -1,0 +1,58 @@
+[project]
+name = "kili-export-formats"
+version = "0.1.0"
+description = ""
+authors = [{ name = "Kili Technology", email = "contact@kili-technology.com" }]
+license = { file = "LICENSE.txt" }
+requires-python = ">=3.8"
+readme = "README.md"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+
+[project.optional-dependencies]
+dev = [
+  # tests
+  "pytest",
+  # linting
+  "pre-commit >= 3.3.0, < 4.0.0",
+  "pylint ==3.0.3",
+  "pyright ==1.1.347"
+]
+
+[tool.black]
+line-length = 100
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+)/
+'''
+
+[tool.isort]
+profile = "black"
+py_version = 38
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"
+ignore = ["E501"]
+
+[tool.ruff.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+line-ending = "lf"
+
+[tool.ruff.isort]
+known-first-party = ["src", "tests"]
+
+[tool.pytest]
+ini_options = { pythonpath = ["src", "."] }
+aliases = ["test = pytest"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["kili_export_formats*"]
