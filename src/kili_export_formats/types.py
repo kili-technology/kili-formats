@@ -1,7 +1,8 @@
 from enum import Enum
-from typing import Dict, List, Literal, NamedTuple, Optional, TypedDict
+from typing import Any, Dict, List, Literal, NamedTuple, Optional, TypedDict
 
 InputType = Literal["IMAGE", "LLM_INSTR_FOLLOWING", "LLM_RLHF", "PDF", "TEXT", "VIDEO"]
+MLTask = Literal["CLASSIFICATION", "NAMED_ENTITIES_RECOGNITION", "OBJECT_DETECTION"]
 
 class JobCategory(NamedTuple):
     """Contains information for a category."""
@@ -22,6 +23,18 @@ class JobTool(str, Enum):
     SEMANTIC = "semantic"
     VECTOR = "vector"
 
+class Job(TypedDict):
+    """Contains job settings."""
+
+    content: Any
+    instruction: str
+    isChild: bool
+    tools: List[JobTool]
+    mlTask: MLTask
+    models: Any  # example: {"interactive-segmentation": {"job": "SEMANTIC_JOB_MARKER"}},
+    isVisible: bool
+    required: int
+    isNew: bool
 
 class ProjectDict(TypedDict):
     description: str

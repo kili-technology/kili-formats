@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 from typing import Dict, List, Optional, Union, cast
 
-from .types import ChatItemRole, ConversationLabel, ExportLLMItem, JobLevel
+from ..types import ChatItemRole, ConversationLabel, ExportLLMItem, JobLevel
 
 
 DEFAULT_JOB_LEVEL = JobLevel.ROUND

@@ -1,6 +1,6 @@
 from typing import Dict
 from kili_export_formats.types import JobCategory
-from kili_export_formats.yolo import convert_from_kili_to_yolo_format
+from kili_export_formats.format.yolo import convert_from_kili_to_yolo_format
 from .fakes.yolo import (
     asset,
     asset_with_0_rotation,

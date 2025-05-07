@@ -2,7 +2,7 @@ from typing import Dict, Sequence
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
-from .base import reverse_rotation_vertices
+from kili_export_formats.tool.base import reverse_rotation_vertices
 
 
 def convert_from_kili_to_voc_format(response: Dict, width: int, height: int, parameters: Dict, valid_jobs: Sequence[str]) -> str:
