@@ -58,6 +58,8 @@ def _parse_annotations(response: Dict, xml_label: ET.Element, width: int, height
                     annotation_category = ET.SubElement(xml_label, "object")
                     name = ET.SubElement(annotation_category, "name")
                     name.text = category["name"]
+                    job_name_xml = ET.SubElement(annotation_category, "job_name")
+                    job_name_xml.text = job_name
                     pose = ET.SubElement(annotation_category, "pose")
                     pose.text = "Unspecified"
                     truncated = ET.SubElement(annotation_category, "truncated")
