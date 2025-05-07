@@ -1,27 +1,29 @@
 [project]
 name = "kili-formats"
-version = "0.1.0"
+version = "0.1.1"
 description = ""
 authors = [{ name = "Kili Technology", email = "contact@kili-technology.com" }]
 license = { file = "LICENSE.txt" }
 requires-python = ">=3.8"
 readme = "README.md"
+dependencies = [
+  "ffmpeg-python >= 0.2.0, < 0.3.0",
+  "Pillow >=9.0.0, <11.0.0",
+  "shapely >= 1.8, < 3",
+]
 
 [build-system]
 requires = ["setuptools", "wheel"]
 
 [project.optional-dependencies]
 dev = [
-  "ffmpeg-python >= 0.2.0, < 0.3.0",
   # tests
   "pytest",
-  "Pillow >=9.0.0, <11.0.0",
   "requests >= 2.0.0, < 3.0.0",
   # linting
   "pre-commit >= 3.3.0, < 4.0.0",
   "pylint ==3.0.3",
-  "pyright ==1.1.347",
-  "shapely >= 1.8, < 3",
+  "pyright ==1.1.347"
 ]
 
 [tool.black]
