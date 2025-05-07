@@ -8,12 +8,12 @@ import pytest
 import requests
 from PIL import Image
 
-from kili_export_formats.format.coco import (
-    convert_kili_semantic_to_coco,
+from kili_formats.format.coco import (
+    convert_from_kili_to_coco_format,
     _get_coco_categories_with_mapping,
     _get_coco_geometry_from_kili_bpoly,
 )
-from kili_export_formats.types import Job
+from kili_formats.types import Job
 
 from .helpers import coco as helpers
 
@@ -26,7 +26,7 @@ def test__get_coco_image_annotations():
         image_width = 1920
         image_height = 1080
         Image.new("RGB", (image_width, image_height)).save(local_file_path)
-        _, paths = convert_kili_semantic_to_coco(
+        _, paths = convert_from_kili_to_coco_format(
             jobs={
                 (job_name): {
                     "mlTask": "OBJECT_DETECTION",
@@ -107,7 +107,7 @@ def test__get_coco_image_annotation_area_with_self_intersecting_polygon():
         image_width = 1920
         image_height = 1080
         Image.new("RGB", (image_width, image_height)).save(local_file_path)
-        _, paths = convert_kili_semantic_to_coco(
+        _, paths = convert_from_kili_to_coco_format(
             jobs={
                 (job_name): {
                     "mlTask": "OBJECT_DETECTION",
@@ -182,7 +182,7 @@ def test__get_coco_image_annotation_area_with_negative_polygons():
         image_width = 1920
         image_height = 1080
         Image.new("RGB", (image_width, image_height)).save(local_file_path)
-        _, paths = convert_kili_semantic_to_coco(
+        _, paths = convert_from_kili_to_coco_format(
             jobs={
                 (job_name): {
                     "mlTask": "OBJECT_DETECTION",
@@ -317,7 +317,7 @@ def test__get_coco_image_annotations_with_label_modifier(
             a for p in normalized_vertices for a in [p["x"] * image_width, p["y"] * image_height]
         ]
 
-        _, output_filenames = convert_kili_semantic_to_coco(
+        _, output_filenames = convert_from_kili_to_coco_format(
             jobs={
                 (job_name): {
                     "mlTask": "OBJECT_DETECTION",
@@ -394,7 +394,7 @@ def test__get_coco_image_annotations_without_annotation():
         image_width = 1920
         image_height = 1080
         Image.new("RGB", (image_width, image_height)).save(local_file_path)
-        convert_kili_semantic_to_coco(
+        convert_from_kili_to_coco_format(
             jobs={
                 (job_name): {
                     "mlTask": "OBJECT_DETECTION",
@@ -514,7 +514,7 @@ def test_coco_video_jsoncontent():
             asset_video_no_content_and_json_content["jsonContent"].append(filepath)
 
         with TemporaryDirectory() as tmp_dir:
-            labels_json, _ = convert_kili_semantic_to_coco(
+            labels_json, _ = convert_from_kili_to_coco_format(
                 jobs={("JOB_0"): Job(**json_interface["jobs"]["JOB_0"])},
                 assets=[asset_video_no_content_and_json_content],
                 output_dir=Path(tmp_dir),
@@ -737,7 +737,7 @@ def test_coco_export_with_multi_jobs():
             },
         ]
 
-        labels_json, output_filenames = convert_kili_semantic_to_coco(
+        labels_json, output_filenames = convert_from_kili_to_coco_format(
             {("MAIN_JOB"): helpers.MAIN_JOB, ("DESSERT_JOB"): helpers.DESSERT_JOB},
             assets,
             Path(output_dir),

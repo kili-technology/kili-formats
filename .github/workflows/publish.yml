@@ -32,8 +32,8 @@ jobs:
 
       - name: Test the Build
         run: |
-          pip install --find-links=dist --no-index kili-export-formats
-          python -c 'from kili_export_formats import convert_from_kili_to_voc_format; print("OK")'
+          pip install --find-links=dist --no-index kili-formats
+          python -c 'from kili_formats import convert_from_kili_to_voc_format; print("OK")'
 
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

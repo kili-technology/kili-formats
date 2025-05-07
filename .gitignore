@@ -2,7 +2,7 @@
 .idea/
 __pycache__/
 .ipynb_checkpoints/
-kili_export_formats.egg-info
+*.egg-info
 dist
 build
 *.weights

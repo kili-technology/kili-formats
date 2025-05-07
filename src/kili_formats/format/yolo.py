@@ -1,7 +1,7 @@
 from typing import Dict, List, Tuple
 
-from kili_export_formats.tool.base import reverse_rotation_vertices
-from kili_export_formats.types import JobCategory, JobTool
+from kili_formats.tool.base import reverse_rotation_vertices
+from kili_formats.types import JobCategory, JobTool
 
 def convert_from_kili_to_yolo_format(
     job_id: str, label: Dict, category_ids: Dict[str, JobCategory]

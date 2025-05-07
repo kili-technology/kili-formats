@@ -1,7 +1,7 @@
 import pytest
 
-from kili_export_formats.exceptions import NotCompatibleOptions
-from kili_export_formats.kili import convert_to_pixel_coords
+from kili_formats.exceptions import NotCompatibleOptions
+from kili_formats.kili import convert_to_pixel_coords
 from .fakes.image import image_asset, image_asset_rotated, image_project, image_project_asset_normalized, image_project_asset_unnormalized, image_rotated_project_asset_unnormalized
 from .fakes.pdf import pdf_asset, pdf_asset_rotated, pdf_project, pdf_project_asset_unnormalized
 from .fakes.video import video_asset, video_project, video_project_asset_unnormalized

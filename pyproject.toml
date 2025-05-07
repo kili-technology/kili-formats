@@ -1,5 +1,5 @@
 [project]
-name = "kili-export-formats"
+name = "kili-formats"
 version = "0.1.0"
 description = ""
 authors = [{ name = "Kili Technology", email = "contact@kili-technology.com" }]
@@ -59,4 +59,4 @@ aliases = ["test = pytest"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["kili_export_formats*"]
+include = ["kili_formats*"]

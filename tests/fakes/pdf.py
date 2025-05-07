@@ -1,4 +1,4 @@
-from kili_export_formats.types import ProjectDict
+from kili_formats.types import ProjectDict
 
 
 pdf_asset = {

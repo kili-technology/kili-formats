@@ -1,7 +1,7 @@
 from typing import Dict
 
-from kili_export_formats.exceptions import NotCompatibleOptions
-from kili_export_formats.media.common import scale_all_vertices
+from kili_formats.exceptions import NotCompatibleOptions
+from kili_formats.media.common import scale_all_vertices
 
 
 def scale_normalized_vertices_pdf_annotation(annotation: Dict, asset: Dict, **kwargs) -> None:

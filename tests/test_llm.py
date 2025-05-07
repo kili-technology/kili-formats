@@ -1,7 +1,7 @@
 import os
 import tempfile
 
-from kili_export_formats.format.llm import convert_from_kili_to_llm_rlhf_format, convert_from_kili_to_llm_static_or_dynamic_format
+from kili_formats.format.llm import convert_from_kili_to_llm_rlhf_format, convert_from_kili_to_llm_static_or_dynamic_format
 from .fakes.llm_dynamic import llm_dynamic_annotations, llm_dynamic_chat_items, llm_dynamic_expected_label, jobs
 from .fakes.llm_static import llm_static_annotations, llm_static_chat_items, llm_static_expected_result
 from .fakes.llm_rlhf import llm_rlhf_expected_result, llm_rlhf_assets, llm_rlhf_json_interface, mock_raw_asset_content

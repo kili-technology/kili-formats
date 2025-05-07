@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict, Tuple
 
 from PIL import Image
-from kili_export_formats.exceptions import NotExportableAssetError
+from kili_formats.exceptions import NotExportableAssetError
 
 
 def _get_image_dimensions(filepath: str) -> Tuple:

@@ -4,10 +4,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from kili_export_formats.media.image import get_frame_dimensions, get_image_dimensions
-from kili_export_formats.media.video import cut_video, get_video_dimensions
-from kili_export_formats.tool.base import reverse_rotation_vertices
-from kili_export_formats.types import Job
+from kili_formats.media.image import get_frame_dimensions, get_image_dimensions
+from kili_formats.media.video import cut_video, get_video_dimensions
+from kili_formats.tool.base import reverse_rotation_vertices
+from kili_formats.types import Job
 import numpy as np
 from shapely.geometry import Polygon
 from shapely.ops import polygonize
@@ -26,7 +26,7 @@ DATA_SUBDIR = "data"
 
 
 # pylint: disable=too-many-arguments
-def convert_kili_semantic_to_coco(
+def convert_from_kili_to_coco_format(
     jobs: Dict[str, Job],
     assets: List[Dict],
     output_dir: Path,

@@ -1,8 +1,8 @@
 from typing import Dict
 
-from kili_export_formats.exceptions import NotCompatibleOptions
-from kili_export_formats.media.common import get_asset_dimensions, scale_all_vertices
-from kili_export_formats.tool.base import reverse_rotation_vertices
+from kili_formats.exceptions import NotCompatibleOptions
+from kili_formats.media.common import get_asset_dimensions, scale_all_vertices
+from kili_formats.tool.base import reverse_rotation_vertices
 
 
 def scale_normalized_vertices_image_video_annotation(
