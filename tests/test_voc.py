@@ -1,3 +1,4 @@
+from pathlib import Path
 from kili_formats.format.voc import convert_from_kili_to_voc_format
 
 xml_str = '<?xml version="1.0" ?>\n<annotation>\n   <folder/>\n   <filename>filename.xml</filename>\n   <path/>\n   <source>\n      <database>Kili Technology</database>\n   </source>\n   <size>\n      <width>1920</width>\n      <height>1080</height>\n      <depth>3</depth>\n   </size>\n   <segmented/>\n   <object>\n      <name>OBJECT_A</name>\n      <job_name>JOB_0</job_name>\n      <pose>Unspecified</pose>\n      <truncated>0</truncated>\n      <difficult>0</difficult>\n      <occluded>0</occluded>\n      <bndbox>\n         <xmin>317</xmin>\n         <xmax>1609</xmax>\n         <ymin>281</ymin>\n         <ymax>863</ymax>\n      </bndbox>\n   </object>\n</annotation>\n'
@@ -35,5 +36,6 @@ def test_voc_convert_from_kili_to_voc_format():
         "filename": "filename.xml",
     }
 
-    xmlstr = convert_from_kili_to_voc_format(response, width, height, parameters, ["JOB_0"])
-    assert xmlstr == xml_str
+    xmlstr = convert_from_kili_to_voc_format(response, width, height, parameters, None)
+    expected_annotation = Path("./tests/expected/object_A_with_0_rotation.xml").read_text(encoding="utf-8")
+    assert xmlstr == expected_annotation
