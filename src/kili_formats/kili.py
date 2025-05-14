@@ -82,6 +82,9 @@ def _scale_label_vertices(label: Dict, asset: Dict,  project: ProjectDict, **kwa
                     annotation_scaler=scale_normalized_vertices_image_video_annotation,
                 )
 
+    elif project["inputType"] == "GEOSPATIAL":
+        return
+
     else:
         raise NotCompatibleInputType(
             f"Labels of input type {project['inputType']} cannot be converted to pixel"

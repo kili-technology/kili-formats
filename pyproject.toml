@@ -1,6 +1,6 @@
 [project]
 name = "kili-formats"
-version = "0.1.2"
+version = "0.1.3"
 description = ""
 authors = [{ name = "Kili Technology", email = "contact@kili-technology.com" }]
 license = { file = "LICENSE.txt" }
