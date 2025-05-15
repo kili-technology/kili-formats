@@ -1,7 +1,9 @@
 from enum import Enum
 from typing import Any, Dict, List, Literal, NamedTuple, NewType, Optional, TypedDict, Union
 
-InputType = Literal["GEOSPATIAL", "IMAGE", "LLM_INSTR_FOLLOWING", "LLM_RLHF", "PDF", "TEXT", "VIDEO"]
+InputType = Literal[
+    "GEOSPATIAL", "IMAGE", "LLM_INSTR_FOLLOWING", "LLM_RLHF", "LLM_STATIC", "PDF", "TEXT", "VIDEO"
+]
 MLTask = Literal["CLASSIFICATION", "NAMED_ENTITIES_RECOGNITION", "OBJECT_DETECTION"]
 
 AnnotationId = NewType("AnnotationId", str)

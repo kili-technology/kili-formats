@@ -1,8 +1,6 @@
-import json
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from unittest.mock import patch
 
 import pytest
 import requests
@@ -21,12 +19,11 @@ from .helpers import coco as helpers
 def test__get_coco_image_annotations():
     with TemporaryDirectory() as tmp_dir:
         job_name = "JOB_0"
-        output_file = Path(tmp_dir) / job_name / "labels.json"
         local_file_path = tmp_dir / Path("image1.jpg")
         image_width = 1920
         image_height = 1080
         Image.new("RGB", (image_width, image_height)).save(local_file_path)
-        _, paths = convert_from_kili_to_coco_format(
+        coco_annotation = convert_from_kili_to_coco_format(
             jobs={
                 (job_name): {
                     "mlTask": "OBJECT_DETECTION",
@@ -64,50 +61,44 @@ def test__get_coco_image_annotations():
                     ],
                 )
             ],
-            output_dir=Path(tmp_dir),
             title="Test project",
             project_input_type="IMAGE",
             annotation_modifier=lambda x, _, _1: x,
             merged=False,
         )
 
-        assert paths[0] == output_file
-        with output_file.open("r", encoding="utf-8") as f:
-            coco_annotation = json.loads(f.read())
+        assert "Test project" in coco_annotation["info"]["description"]
+        categories_by_id = {cat["id"]: cat["name"] for cat in coco_annotation["categories"]}
+        assert coco_annotation["images"][0]["file_name"] == "data/image1.jpg"
+        assert coco_annotation["images"][0]["width"] == 1920
+        assert coco_annotation["images"][0]["height"] == 1080
+        assert coco_annotation["annotations"][0]["image_id"] == 0
+        assert categories_by_id[coco_annotation["annotations"][0]["category_id"]] == "OBJECT_A"
+        assert coco_annotation["annotations"][0]["bbox"] == [0, 0, 960, 540]
+        assert coco_annotation["annotations"][0]["segmentation"] == [
+            [0.0, 0.0, 960.0, 0.0, 0.0, 540.0]
+        ]
+        # Area of a triangle: base * height / 2
+        assert coco_annotation["annotations"][0]["area"] == 960.0 * 540.0 / 2
 
-            assert "Test project" in coco_annotation["info"]["description"]
-            categories_by_id = {cat["id"]: cat["name"] for cat in coco_annotation["categories"]}
-            assert coco_annotation["images"][0]["file_name"] == "data/image1.jpg"
-            assert coco_annotation["images"][0]["width"] == 1920
-            assert coco_annotation["images"][0]["height"] == 1080
-            assert coco_annotation["annotations"][0]["image_id"] == 0
-            assert categories_by_id[coco_annotation["annotations"][0]["category_id"]] == "OBJECT_A"
-            assert coco_annotation["annotations"][0]["bbox"] == [0, 0, 960, 540]
-            assert coco_annotation["annotations"][0]["segmentation"] == [
-                [0.0, 0.0, 960.0, 0.0, 0.0, 540.0]
-            ]
-            # Area of a triangle: base * height / 2
-            assert coco_annotation["annotations"][0]["area"] == 960.0 * 540.0 / 2
-
-            good_date = True
-            try:
-                datetime.strptime(coco_annotation["info"]["date_created"], "%Y-%m-%dT%H:%M:%S.%f")
-            except ValueError:
-                good_date = False
-            assert good_date, (
-                "The date is not in the right format: " + coco_annotation["info"]["date_created"]
-            )
+        good_date = True
+        try:
+            datetime.strptime(coco_annotation["info"]["date_created"], "%Y-%m-%dT%H:%M:%S.%f")
+        except ValueError:
+            good_date = False
+        assert good_date, (
+            "The date is not in the right format: " + coco_annotation["info"]["date_created"]
+        )
 
 
 def test__get_coco_image_annotation_area_with_self_intersecting_polygon():
     with TemporaryDirectory() as tmp_dir:
         job_name = "JOB_0"
-        output_file = Path(tmp_dir) / job_name / "labels.json"
         local_file_path = tmp_dir / Path("image1.jpg")
         image_width = 1920
         image_height = 1080
         Image.new("RGB", (image_width, image_height)).save(local_file_path)
-        _, paths = convert_from_kili_to_coco_format(
+        coco_annotation = convert_from_kili_to_coco_format(
             jobs={
                 (job_name): {
                     "mlTask": "OBJECT_DETECTION",
@@ -153,36 +144,30 @@ def test__get_coco_image_annotation_area_with_self_intersecting_polygon():
                     ],
                 )
             ],
-            output_dir=Path(tmp_dir),
             title="Test project",
             project_input_type="IMAGE",
             annotation_modifier=lambda x, _, _1: x,
             merged=False,
         )
 
-        assert paths[0] == output_file
-        with output_file.open("r", encoding="utf-8") as f:
-            coco_annotation = json.loads(f.read())
-
-            assert coco_annotation["annotations"][0]["bbox"] == [0, 0, 960, 540]
-            assert coco_annotation["annotations"][0]["segmentation"] == [
-                [0.0, 0.0, 960.0, 0.0, 0.0, 540.0, 960.0, 540.0, 0.0, 0.0]
-            ]
-            # Here we have a self-intersecting polygon with 2 opposites triangles, so the area is
-            # the sum of the areas of the 2 triangles.
-            # Area of a triangle: base * height / 2
-            assert coco_annotation["annotations"][0]["area"] == (960.0 * 270.0 / 2) * 2
+        assert coco_annotation["annotations"][0]["bbox"] == [0, 0, 960, 540]
+        assert coco_annotation["annotations"][0]["segmentation"] == [
+            [0.0, 0.0, 960.0, 0.0, 0.0, 540.0, 960.0, 540.0, 0.0, 0.0]
+        ]
+        # Here we have a self-intersecting polygon with 2 opposites triangles, so the area is
+        # the sum of the areas of the 2 triangles.
+        # Area of a triangle: base * height / 2
+        assert coco_annotation["annotations"][0]["area"] == (960.0 * 270.0 / 2) * 2
 
 
 def test__get_coco_image_annotation_area_with_negative_polygons():
     with TemporaryDirectory() as tmp_dir:
         job_name = "JOB_0"
-        output_file = Path(tmp_dir) / job_name / "labels.json"
         local_file_path = tmp_dir / Path("image1.jpg")
         image_width = 1920
         image_height = 1080
         Image.new("RGB", (image_width, image_height)).save(local_file_path)
-        _, paths = convert_from_kili_to_coco_format(
+        coco_annotation = convert_from_kili_to_coco_format(
             jobs={
                 (job_name): {
                     "mlTask": "OBJECT_DETECTION",
@@ -250,29 +235,24 @@ def test__get_coco_image_annotation_area_with_negative_polygons():
                     ],
                 )
             ],
-            output_dir=Path(tmp_dir),
             title="Test project",
             project_input_type="IMAGE",
             annotation_modifier=lambda x, _, _1: x,
             merged=False,
         )
 
-        assert paths[0] == output_file
-        with output_file.open("r", encoding="utf-8") as f:
-            coco_annotation = json.loads(f.read())
-
-            assert coco_annotation["annotations"][0]["bbox"] == [0, 0, 960, 540]
-            assert coco_annotation["annotations"][0]["segmentation"] == [
-                [0.0, 0.0, 960.0, 0.0, 0.0, 540.0],
-                [192.0, 108.0, 768.0, 108.0, 192.0, 432.0],
-                [0.0, 0.0, 192.0, 0.0, 0.0, 108.0],
-            ]
-            # Here we have a positive triangle with 2 negative triangles inside, so the area is the
-            # area of the positive triangle minus the area of the negative triangles.
-            # Area of a triangle: base * height / 2
-            assert coco_annotation["annotations"][0]["area"] == (960.0 * 540.0 / 2) - (
-                576.0 * 324.0 / 2
-            ) - (192.0 * 108.0 / 2)
+        assert coco_annotation["annotations"][0]["bbox"] == [0, 0, 960, 540]
+        assert coco_annotation["annotations"][0]["segmentation"] == [
+            [0.0, 0.0, 960.0, 0.0, 0.0, 540.0],
+            [192.0, 108.0, 768.0, 108.0, 192.0, 432.0],
+            [0.0, 0.0, 192.0, 0.0, 0.0, 108.0],
+        ]
+        # Here we have a positive triangle with 2 negative triangles inside, so the area is the
+        # area of the positive triangle minus the area of the negative triangles.
+        # Area of a triangle: base * height / 2
+        assert coco_annotation["annotations"][0]["area"] == (960.0 * 540.0 / 2) - (
+            576.0 * 324.0 / 2
+        ) - (192.0 * 108.0 / 2)
 
 
 @pytest.mark.parametrize(
@@ -317,7 +297,7 @@ def test__get_coco_image_annotations_with_label_modifier(
             a for p in normalized_vertices for a in [p["x"] * image_width, p["y"] * image_height]
         ]
 
-        _, output_filenames = convert_from_kili_to_coco_format(
+        coco_annotation = convert_from_kili_to_coco_format(
             jobs={
                 (job_name): {
                     "mlTask": "OBJECT_DETECTION",
@@ -342,59 +322,53 @@ def test__get_coco_image_annotations_with_label_modifier(
                     with_annotation=normalized_vertices,
                 )
             ],
-            output_dir=Path(tmp_dir),
             title="Test project",
             project_input_type="IMAGE",
             annotation_modifier=helpers.estimate_rotated_bb_from_kili_poly,
             merged=False,
         )
-        assert output_filenames[0] == Path(tmp_dir) / job_name / "labels.json"
 
-        with output_filenames[0].open("r", encoding="utf-8") as f:
-            coco_annotation = json.loads(f.read())
+        #### DON'T DELETE - for debugging #####
+        # helpers.display_kili_and_coco_bbox(
+        # local_file_path, expected_segmentation, coco_annotation
+        # )
+        ##########
 
-            #### DON'T DELETE - for debugging #####
-            # helpers.display_kili_and_coco_bbox(
-            # local_file_path, expected_segmentation, coco_annotation
-            # )
-            ##########
+        assert "Test project" in coco_annotation["info"]["description"]
+        categories_by_id = {cat["id"]: cat["name"] for cat in coco_annotation["categories"]}
+        assert coco_annotation["images"][0]["file_name"] == "data/image1.jpg"
+        assert coco_annotation["images"][0]["width"] == image_width
+        assert coco_annotation["images"][0]["height"] == image_height
+        assert coco_annotation["annotations"][0]["image_id"] == 0
+        assert categories_by_id[coco_annotation["annotations"][0]["category_id"]] == "OBJECT_A"
+        assert coco_annotation["annotations"][0]["bbox"] == pytest.approx(expected_bounding_box)
+        assert coco_annotation["annotations"][0]["attributes"] == {"rotation": expected_angle}
+        assert coco_annotation["annotations"][0]["segmentation"][0] == pytest.approx(
+            expected_segmentation
+        )
+        # Area of a rectangle: width * height
+        assert coco_annotation["annotations"][0]["area"] == round(
+            expected_bounding_box[2] * expected_bounding_box[3]
+        )
 
-            assert "Test project" in coco_annotation["info"]["description"]
-            categories_by_id = {cat["id"]: cat["name"] for cat in coco_annotation["categories"]}
-            assert coco_annotation["images"][0]["file_name"] == "data/image1.jpg"
-            assert coco_annotation["images"][0]["width"] == image_width
-            assert coco_annotation["images"][0]["height"] == image_height
-            assert coco_annotation["annotations"][0]["image_id"] == 0
-            assert categories_by_id[coco_annotation["annotations"][0]["category_id"]] == "OBJECT_A"
-            assert coco_annotation["annotations"][0]["bbox"] == pytest.approx(expected_bounding_box)
-            assert coco_annotation["annotations"][0]["attributes"] == {"rotation": expected_angle}
-            assert coco_annotation["annotations"][0]["segmentation"][0] == pytest.approx(
-                expected_segmentation
-            )
-            # Area of a rectangle: width * height
-            assert coco_annotation["annotations"][0]["area"] == round(
-                expected_bounding_box[2] * expected_bounding_box[3]
-            )
-
-            good_date = True
-            try:
-                datetime.strptime(coco_annotation["info"]["date_created"], "%Y-%m-%dT%H:%M:%S.%f")
-            except ValueError:
-                good_date = False
-            assert good_date, (
-                "The date is not in the right format: " + coco_annotation["info"]["date_created"]
-            )
+        good_date = True
+        try:
+            datetime.strptime(coco_annotation["info"]["date_created"], "%Y-%m-%dT%H:%M:%S.%f")
+        except ValueError:
+            good_date = False
+        assert good_date, (
+            "The date is not in the right format: " + coco_annotation["info"]["date_created"]
+        )
 
 
 def test__get_coco_image_annotations_without_annotation():
     with TemporaryDirectory() as tmp_dir:
         job_name = "JOB_0"
-        output_file = Path(tmp_dir) / job_name / "labels.json"
         local_file_path = tmp_dir / Path("image1.jpg")
         image_width = 1920
         image_height = 1080
         Image.new("RGB", (image_width, image_height)).save(local_file_path)
-        convert_from_kili_to_coco_format(
+        coco_annotation = convert_from_kili_to_coco_format(
             jobs={
                 (job_name): {
                     "mlTask": "OBJECT_DETECTION",
@@ -419,21 +393,17 @@ def test__get_coco_image_annotations_without_annotation():
                     with_annotation=None,
                 )
             ],
-            output_dir=Path(tmp_dir),
             title="Test project",
             project_input_type="IMAGE",
             annotation_modifier=lambda x, _, _1: x,
             merged=False,
         )
 
-        with output_file.open("r", encoding="utf-8") as f:
-            coco_annotation = json.loads(f.read())
-
-            assert "Test project" in coco_annotation["info"]["description"]
-            assert coco_annotation["images"][0]["file_name"] == "data/image1.jpg"
-            assert coco_annotation["images"][0]["width"] == 1920
-            assert coco_annotation["images"][0]["height"] == 1080
-            assert len(coco_annotation["annotations"]) == 0
+        assert "Test project" in coco_annotation["info"]["description"]
+        assert coco_annotation["images"][0]["file_name"] == "data/image1.jpg"
+        assert coco_annotation["images"][0]["width"] == 1920
+        assert coco_annotation["images"][0]["height"] == 1080
+        assert len(coco_annotation["annotations"]) == 0
 
 
 def test_coco_video_jsoncontent():
@@ -513,26 +483,24 @@ def test_coco_video_jsoncontent():
                 f.write(requests.get(filelink, timeout=20).content)
             asset_video_no_content_and_json_content["jsonContent"].append(filepath)
 
-        with TemporaryDirectory() as tmp_dir:
-            labels_json, _ = convert_from_kili_to_coco_format(
-                jobs={("JOB_0"): Job(**json_interface["jobs"]["JOB_0"])},
-                assets=[asset_video_no_content_and_json_content],
-                output_dir=Path(tmp_dir),
-                title="test",
-                project_input_type="VIDEO",
-                annotation_modifier=lambda x, _, _1: x,
-                merged=False,
-            )
+        labels_json = convert_from_kili_to_coco_format(
+            jobs={("JOB_0"): Job(**json_interface["jobs"]["JOB_0"])},
+            assets=[asset_video_no_content_and_json_content],
+            title="test",
+            project_input_type="VIDEO",
+            annotation_modifier=lambda x, _, _1: x,
+            merged=False,
+        )
 
-            assert len(labels_json["images"]) == 5
-            assert len(labels_json["annotations"]) == 2  # 2 frames with annotations
+        assert len(labels_json["images"]) == 5
+        assert len(labels_json["annotations"]) == 2  # 2 frames with annotations
 
-            assert [img["file_name"] for img in labels_json["images"]] == [
-                f"data/video2_{i+1}.jpg" for i in range(5)
-            ]
+        assert [img["file_name"] for img in labels_json["images"]] == [
+            f"data/video2_{i+1}.jpg" for i in range(5)
+        ]
 
-            assert labels_json["annotations"][0]["image_id"] == 2
-            assert labels_json["annotations"][1]["image_id"] == 3
+        assert labels_json["annotations"][0]["image_id"] == 2
+        assert labels_json["annotations"][1]["image_id"] == 3
 
 
 def test_get_coco_geometry_from_kili_bpoly():
@@ -737,23 +705,18 @@ def test_coco_export_with_multi_jobs():
             },
         ]
 
-        labels_json, output_filenames = convert_from_kili_to_coco_format(
+        labels_json = convert_from_kili_to_coco_format(
             {("MAIN_JOB"): helpers.MAIN_JOB, ("DESSERT_JOB"): helpers.DESSERT_JOB},
             assets,
-            Path(output_dir),
             "Multi job project",
             "IMAGE",
             annotation_modifier=None,
             merged=True,
         )
-        assert len(output_filenames) == 1
-        assert output_filenames[0] == Path(output_dir) / "labels.json"
 
-        with output_filenames[0].open("r", encoding="utf-8") as f:
-            coco_annotation = json.loads(f.read())
         assert len(labels_json["images"]) == 2
         assert len(labels_json["annotations"]) == 2  # 2 frames with annotations
-        categories_by_id = {cat["id"]: cat["name"] for cat in coco_annotation["categories"]}
+        categories_by_id = {cat["id"]: cat["name"] for cat in labels_json["categories"]}
 
         assert labels_json["annotations"][0]["image_id"] == 0
         assert labels_json["annotations"][1]["image_id"] == 1
@@ -766,11 +729,11 @@ def test_coco_export_with_multi_jobs():
         ]
 
         assert (
-            categories_by_id[coco_annotation["annotations"][0]["category_id"]]
+            categories_by_id[labels_json["annotations"][0]["category_id"]]
             == "DESSERT_JOB/APPLE_PIE"
         )
         assert (
-            categories_by_id[coco_annotation["annotations"][1]["category_id"]]
+            categories_by_id[labels_json["annotations"][1]["category_id"]]
             == "MAIN_JOB/SPAGHETTIS"
         )
 

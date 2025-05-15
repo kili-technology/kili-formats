@@ -29,12 +29,11 @@ DATA_SUBDIR = "data"
 def convert_from_kili_to_coco_format(
     jobs: Dict[str, Job],
     assets: List[Dict],
-    output_dir: Path,
     title: str,
     project_input_type: str,
     annotation_modifier: Optional[CocoAnnotationModifier],
     merged: bool,
-) -> Tuple[CocoFormat, List[Path]]:
+) -> Tuple[CocoFormat]:
     """Creates the following structure on the disk.
 
     <dataset_dir>/
@@ -79,13 +78,7 @@ def convert_from_kili_to_coco_format(
             is_single_job=False,
         )
 
-        label_file_name = output_dir / "labels.json"
-        label_file_name.parent.mkdir(parents=True, exist_ok=True)
-        with label_file_name.open("w") as outfile:
-            json.dump(labels_json, outfile)
-        label_filenames = [label_file_name]
     else:  # split case
-        label_filenames = []
         for job_name, job in jobs.items():
             labels_json["images"], labels_json["annotations"] = _get_coco_images_and_annotations(
                 {job_name: job},
@@ -95,14 +88,8 @@ def convert_from_kili_to_coco_format(
                 annotation_modifier,
                 is_single_job=True,
             )
-            label_file_name = output_dir / job_name / "labels.json"
 
-            label_file_name.parent.mkdir(parents=True, exist_ok=True)
-            with label_file_name.open("w") as outfile:
-                json.dump(labels_json, outfile)
-            label_filenames.append(label_file_name)
-
-    return labels_json, label_filenames
+    return labels_json
 
 
 def _get_coco_categories_with_mapping(
