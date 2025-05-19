@@ -1,6 +1,5 @@
 from kili_formats.format.llm import JobLevel
 
-
 jobs = {
     "CLASSIFICATION_JOB_AT_COMPLETION_LEVEL": {
         "content": {

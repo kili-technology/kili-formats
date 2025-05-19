@@ -13,7 +13,7 @@ def scale_normalized_vertices_image_video_annotation(
         width, height = get_asset_dimensions(asset)
     except (KeyError, TypeError):
         return
-    
+
     rotation = kwargs.get("rotation", 0)
     normalized_vertices = kwargs.get("normalized_vertices", True)
 
@@ -70,4 +70,3 @@ def scale_normalized_vertices_image_video_annotation(
                 point_dict["pointPixels"] = scale_all_vertices(
                     point_dict["point"], width=width, height=height
                 )
-

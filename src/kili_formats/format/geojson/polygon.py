@@ -2,9 +2,7 @@
 
 from typing import Any, Dict, List, Optional
 
-from .exceptions import (
-    ConversionError,
-)
+from .exceptions import ConversionError
 
 
 def get_oriented_area(vertices):

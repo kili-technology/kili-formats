@@ -1,6 +1,5 @@
 from kili_formats.types import ProjectDict
 
-
 image_asset = {
     "content": "https://storage.googleapis.com/label-backend-staging/projects/clk8fq8edf38d13",
     "externalId": "42015077eed072c50d59232dcc0ad0b1.jpg",

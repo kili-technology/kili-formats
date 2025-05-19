@@ -1,9 +1,8 @@
 from typing import Callable, Dict
 
-from .tool.video import scale_normalized_vertices_image_video_annotation
-from .tool.pdf import scale_normalized_vertices_pdf_annotation
-
 from .exceptions import NotCompatibleInputType
+from .tool.pdf import scale_normalized_vertices_pdf_annotation
+from .tool.video import scale_normalized_vertices_image_video_annotation
 from .types import ProjectDict
 
 
@@ -16,6 +15,7 @@ def clean_json_response(asset: Dict):
             if label.get("jsonResponse", {}) and "ROTATION_JOB" in label["jsonResponse"]:
                 label["jsonResponse"].pop("ROTATION_JOB")
 
+
 def format_json_response(label):
     """Format the label JSON response in the requested format."""
     keys = list(label["jsonResponse"].keys())
@@ -23,6 +23,7 @@ def format_json_response(label):
     for key in keys:
         if key.isdigit():
             label["jsonResponse"][int(key)] = label["jsonResponse"].pop(key)
+
 
 def convert_to_pixel_coords(asset: Dict, project: ProjectDict, **kwargs) -> Dict:
     """Convert asset JSON response normalized vertices to pixel coordinates."""
@@ -32,10 +33,11 @@ def convert_to_pixel_coords(asset: Dict, project: ProjectDict, **kwargs) -> Dict
     if asset.get("labels"):
         for label in asset["labels"]:
             _scale_label_vertices(label, asset, project, **kwargs)
-    
+
     return asset
 
-def _scale_label_vertices(label: Dict, asset: Dict,  project: ProjectDict, **kwargs) -> None:
+
+def _scale_label_vertices(label: Dict, asset: Dict, project: ProjectDict, **kwargs) -> None:
     if not label.get("jsonResponse", {}):
         return
 
@@ -87,12 +89,12 @@ def _scale_label_vertices(label: Dict, asset: Dict,  project: ProjectDict, **kwa
 
     else:
         raise NotCompatibleInputType(
-            f"Labels of input type {project['inputType']} cannot be converted to pixel"
-            " coordinates."
+            f"Labels of input type {project['inputType']} cannot be converted to pixel coordinates."
         )
 
+
 def _scale_json_response_vertices(
-        asset: Dict, project: ProjectDict, json_resp: Dict, annotation_scaler: Callable, **kwargs
+    asset: Dict, project: ProjectDict, json_resp: Dict, annotation_scaler: Callable, **kwargs
 ) -> None:
     if not callable(annotation_scaler):
         return
@@ -102,6 +104,7 @@ def _scale_json_response_vertices(
         ):
             for ann in json_resp[job_name]["annotations"]:
                 annotation_scaler(ann, asset, **kwargs)
+
 
 def _can_scale_vertices_for_job_name(job_name: str, project: ProjectDict) -> bool:
     if project["jsonInterface"] is None:

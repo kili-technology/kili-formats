@@ -45,4 +45,5 @@ class CocoFormat(TypedDict):
     images: List[CocoImage]
     annotations: List[CocoAnnotation]
 
+
 CocoAnnotationModifier = Callable[[Dict, Dict, Dict], Dict]

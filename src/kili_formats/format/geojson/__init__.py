@@ -1,6 +1,4 @@
-from .collection import kili_json_response_to_feature_collection
-from typing import Dict, Any
-
+from typing import Any, Dict
 
 from .bbox import (
     geojson_polygon_feature_to_kili_bbox_annotation,

@@ -94,9 +94,7 @@ llm_rlhf_assets = [
                 },
                 "jsonResponse": {
                     "CLASSIFICATION_JOB": {"categories": [{"name": "TIE"}]},
-                    "TRANSCRIPTION_JOB": {
-                        "text": "There is only some formatting changes\n"
-                    },
+                    "TRANSCRIPTION_JOB": {"text": "There is only some formatting changes\n"},
                 },
                 "createdAt": "2024-08-05T13:03:16.028Z",
                 "isLatestLabelForUser": True,

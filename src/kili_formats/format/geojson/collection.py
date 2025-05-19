@@ -7,9 +7,10 @@ from .bbox import (
     geojson_polygon_feature_to_kili_bbox_annotation,
     kili_bbox_annotation_to_geojson_polygon_feature,
 )
-from .exceptions import (
-    ConversionError,
+from .classification import (
+    kili_classification_annotation_to_geojson_non_localised_feature,
 )
+from .exceptions import ConversionError
 from .line import (
     geojson_linestring_feature_to_kili_line_annotation,
     kili_line_annotation_to_geojson_linestring_feature,
@@ -26,11 +27,8 @@ from .segmentation import (
     geojson_polygon_feature_to_kili_segmentation_annotation,
     kili_segmentation_annotation_to_geojson_polygon_feature,
 )
-from .classification import (
-    kili_classification_annotation_to_geojson_non_localised_feature
-)
 from .transcription import (
-    kili_transcription_annotation_to_geojson_non_localised_feature
+    kili_transcription_annotation_to_geojson_non_localised_feature,
 )
 
 
@@ -134,11 +132,11 @@ def kili_json_response_to_feature_collection(json_response: Dict[str, Any]) -> D
     features = []
 
     annotation_tool_to_converter = {
-        "rectangle": kili_bbox_annotation_to_geojson_polygon_feature, # bbox
-        "marker": kili_point_annotation_to_geojson_point_feature, # point
-        "polygon": kili_polygon_annotation_to_geojson_polygon_feature, # polygon
-        "polyline": kili_line_annotation_to_geojson_linestring_feature, # line
-        "semantic": kili_segmentation_annotation_to_geojson_polygon_feature, # semantic
+        "rectangle": kili_bbox_annotation_to_geojson_polygon_feature,  # bbox
+        "marker": kili_point_annotation_to_geojson_point_feature,  # point
+        "polygon": kili_polygon_annotation_to_geojson_polygon_feature,  # polygon
+        "polyline": kili_line_annotation_to_geojson_linestring_feature,  # line
+        "semantic": kili_segmentation_annotation_to_geojson_polygon_feature,  # semantic
     }
 
     jobs_skipped = []
@@ -146,13 +144,17 @@ def kili_json_response_to_feature_collection(json_response: Dict[str, Any]) -> D
     for job_name, job_response in json_response.items():
         if "text" in job_response:
             features.append(
-                kili_transcription_annotation_to_geojson_non_localised_feature(job_response, job_name),
+                kili_transcription_annotation_to_geojson_non_localised_feature(
+                    job_response, job_name
+                ),
             )
             continue
 
         if "categories" in job_response:
             features.append(
-                kili_classification_annotation_to_geojson_non_localised_feature(job_response, job_name),
+                kili_classification_annotation_to_geojson_non_localised_feature(
+                    job_response, job_name
+                ),
             )
             continue
 
@@ -262,9 +264,7 @@ def geojson_feature_collection_to_kili_json_response(
             # non localised annotation
             if feature.get("properties").get("kili", {}).get("text") is not None:
                 # transcription job
-                json_response[job_name] = {
-                    "text": feature["properties"]["kili"]["text"]
-                }
+                json_response[job_name] = {"text": feature["properties"]["kili"]["text"]}
             elif feature.get("properties").get("kili", {}).get("categories") is not None:
                 # classification job
                 json_response[job_name] = {

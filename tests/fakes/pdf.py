@@ -1,6 +1,5 @@
 from kili_formats.types import ProjectDict
 
-
 pdf_asset = {
     "latestLabel": {
         "author": {
@@ -107,7 +106,7 @@ pdf_asset_rotated = {
                         "type": "rectangle",
                     },
                 ]
-            }
+            },
         },
         "createdAt": "2023-07-03T12:18:08.825Z",
         "isLatestLabelForUser": True,

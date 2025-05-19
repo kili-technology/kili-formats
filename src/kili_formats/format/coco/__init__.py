@@ -1,18 +1,17 @@
-import json
 import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-from kili_formats.media.image import get_frame_dimensions, get_image_dimensions
-from kili_formats.media.video import cut_video, get_video_dimensions
-from kili_formats.tool.base import reverse_rotation_vertices
-from kili_formats.types import Job
 import numpy as np
 from shapely.geometry import Polygon
 from shapely.ops import polygonize
 from shapely.validation import make_valid
 
+from kili_formats.media.image import get_frame_dimensions, get_image_dimensions
+from kili_formats.media.video import cut_video, get_video_dimensions
+from kili_formats.tool.base import reverse_rotation_vertices
+from kili_formats.types import Job
 
 from .types import (
     CocoAnnotation,
@@ -153,6 +152,7 @@ def _get_coco_images_and_annotations(
 
     raise NotImplementedError(f"No conversion to COCO possible for input type {project_input_type}")
 
+
 def _get_images_and_annotation_for_images(
     jobs: Dict[str, Job],
     assets: List[Dict],
@@ -251,7 +251,7 @@ def _get_images_and_annotation_for_videos(
         for frame_i, (frame_id, json_response) in enumerate(
             asset["latestLabel"]["jsonResponse"].items()
         ):
-            frame_name = f'{asset["externalId"]}_{str(int(frame_id)+1).zfill(leading_zeros)}'
+            frame_name = f"{asset['externalId']}_{str(int(frame_id) + 1).zfill(leading_zeros)}"
             coco_image = CocoImage(
                 id=frame_i + len(assets),  # add offset to avoid duplicate ids
                 license=0,
@@ -342,8 +342,6 @@ def _get_coco_image_annotations(
 
         coco_annotations.append(coco_annotation)
     return coco_annotations, annotation_j
-
-
 
 
 def _get_coco_geometry_from_kili_bpoly(

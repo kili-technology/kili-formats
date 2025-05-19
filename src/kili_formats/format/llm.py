@@ -1,14 +1,16 @@
-from pathlib import Path
 import json
+from pathlib import Path
 from typing import Dict, List, Optional, Union, cast
 
 from ..types import ChatItemRole, ConversationLabel, ExportLLMItem, JobLevel
 
-
 DEFAULT_JOB_LEVEL = JobLevel.ROUND
 SEPARATOR = "___"
 
-def convert_from_kili_to_llm_static_or_dynamic_format(annotations: List[Dict], chat_items: List[Dict], jobs: Dict) -> ConversationLabel:
+
+def convert_from_kili_to_llm_static_or_dynamic_format(
+    annotations: List[Dict], chat_items: List[Dict], jobs: Dict
+) -> ConversationLabel:
     formatted_label = {JobLevel.COMPLETION: {}, JobLevel.CONVERSATION: {}, JobLevel.ROUND: {}}
 
     for job_name, job in jobs.items():
@@ -28,12 +30,9 @@ def convert_from_kili_to_llm_static_or_dynamic_format(annotations: List[Dict], c
 
     return cast(ConversationLabel, formatted_label)
 
-def format_completion_job(
-    job_name: str, annotations: List[Dict], chat_items: List[Dict]
-) -> Dict:
-    id_to_external_id = {
-        item["id"]: item.get("externalId") or item["id"] for item in chat_items
-    }
+
+def format_completion_job(job_name: str, annotations: List[Dict], chat_items: List[Dict]) -> Dict:
+    id_to_external_id = {item["id"]: item.get("externalId") or item["id"] for item in chat_items}
     job_annotations = [
         annotation for annotation in annotations if annotation.get("job") == job_name
     ]
@@ -42,12 +41,9 @@ def format_completion_job(
         for annotation in job_annotations
     }
 
-def format_round_job(
-    job_name: str, annotations: List[Dict], chat_items: List[Dict]
-) -> Dict:
-    id_to_external_id = {
-        item["id"]: item.get("externalId") or item["id"] for item in chat_items
-    }
+
+def format_round_job(job_name: str, annotations: List[Dict], chat_items: List[Dict]) -> Dict:
+    id_to_external_id = {item["id"]: item.get("externalId") or item["id"] for item in chat_items}
     job_annotations = [
         annotation for annotation in annotations if annotation.get("job") == job_name
     ]
@@ -64,6 +60,7 @@ def format_round_job(
         for annotation in job_annotations
     }
 
+
 def format_conversation_job(job_name: str, annotations: List[Dict]) -> Dict:
     annotation = next(
         (annotation for annotation in annotations if annotation["job"] == job_name), None
@@ -71,6 +68,7 @@ def format_conversation_job(job_name: str, annotations: List[Dict]) -> Dict:
     if annotation:
         return annotation["annotationValue"]
     return {}
+
 
 def format_annotation_value(annotation_value: Dict, id_to_external_id: Dict[str, str]) -> Dict:
     if annotation_value.get("choice"):
@@ -80,6 +78,7 @@ def format_annotation_value(annotation_value: Dict, id_to_external_id: Dict[str,
             "secondId": id_to_external_id.get(annotation_value["choice"]["secondId"]),
         }
     return annotation_value
+
 
 def convert_from_kili_to_llm_rlhf_format(
     assets: List[Dict], json_interface: Dict[str, Dict], logging
@@ -108,6 +107,7 @@ def convert_from_kili_to_llm_rlhf_format(
             }
         )
     return result
+
 
 def _format_json_response(
     jobs_config: Dict, json_response: Dict, logging
@@ -200,6 +200,7 @@ def _format_raw_data(
     else:
         raise ValueError(f"Version {version} not supported")
     return raw_data
+
 
 def _safe_pop(lst, index=0):
     try:

@@ -1,5 +1,6 @@
 from typing import Dict, List
 
+
 def reverse_rotation_vertices(normalized_vertices, rotation_angle) -> List[Dict]:
     """Allows to retrieve vertices without rotation."""
     vertices_before_rotate = []

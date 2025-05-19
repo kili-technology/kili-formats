@@ -23,4 +23,3 @@ def get_asset_dimensions(asset: Dict):
 
 def _scale_vertex(vertex: Dict, width: int, height: int) -> Dict:
     return {"x": vertex["x"] * width, "y": vertex["y"] * height}
- 

@@ -1,8 +1,19 @@
 """Annotation object to json response converter."""
+
 import math
 from collections import defaultdict
 from dataclasses import dataclass
-from typing import Dict, Generator, List, Optional, Tuple, TypeVar, Union, cast, overload
+from typing import (
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+    overload,
+)
 
 from kili_formats.types import (
     ClassicAnnotation,

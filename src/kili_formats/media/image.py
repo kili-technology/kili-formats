@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Dict, Tuple
 
 from PIL import Image
+
 from kili_formats.exceptions import NotExportableAssetError
 
 

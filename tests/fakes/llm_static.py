@@ -1,6 +1,5 @@
 from kili_formats.format.llm import JobLevel
 
-
 llm_static_annotations = [
     {
         "id": "20250115091847438-1",

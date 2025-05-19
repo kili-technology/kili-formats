@@ -1,11 +1,13 @@
-from typing import Dict, Optional, Sequence
 import xml.etree.ElementTree as ET
+from typing import Dict, Optional, Sequence
 from xml.dom import minidom
 
 from kili_formats.tool.base import reverse_rotation_vertices
 
 
-def convert_from_kili_to_voc_format(response: Dict, width: int, height: int, parameters: Dict, valid_jobs: Optional[Sequence[str]]) -> str:
+def convert_from_kili_to_voc_format(
+    response: Dict, width: int, height: int, parameters: Dict, valid_jobs: Optional[Sequence[str]]
+) -> str:
     xml_label = ET.Element("annotation")
 
     _provide_voc_headers(xml_label, width, height, parameters=parameters)
@@ -15,6 +17,7 @@ def convert_from_kili_to_voc_format(response: Dict, width: int, height: int, par
     xmlstr = minidom.parseString(ET.tostring(xml_label)).toprettyxml(indent="   ")
 
     return xmlstr
+
 
 def _provide_voc_headers(xml_label: ET.Element, width: int, height: int, parameters: Dict) -> None:
     folder = ET.SubElement(xml_label, "folder")
@@ -41,7 +44,14 @@ def _provide_voc_headers(xml_label: ET.Element, width: int, height: int, paramet
     segmented = ET.SubElement(xml_label, "segmented")
     segmented.text = 0  # type: ignore
 
-def _parse_annotations(response: Dict, xml_label: ET.Element, width: int, height:int, valid_jobs: Optional[Sequence[str]]) -> None:
+
+def _parse_annotations(
+    response: Dict,
+    xml_label: ET.Element,
+    width: int,
+    height: int,
+    valid_jobs: Optional[Sequence[str]],
+) -> None:
     # pylint: disable=too-many-locals
     rotation_val = 0
     if "ROTATION_JOB" in response:

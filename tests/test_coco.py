@@ -7,9 +7,9 @@ import requests
 from PIL import Image
 
 from kili_formats.format.coco import (
-    convert_from_kili_to_coco_format,
     _get_coco_categories_with_mapping,
     _get_coco_geometry_from_kili_bpoly,
+    convert_from_kili_to_coco_format,
 )
 from kili_formats.types import Job
 
@@ -477,7 +477,7 @@ def test_coco_video_jsoncontent():
         ):
             filepath = (
                 Path(tmp_dir_for_frames)
-                / f'{asset_video_no_content_and_json_content["externalId"]}_{i+1}.jpg'
+                / f"{asset_video_no_content_and_json_content['externalId']}_{i + 1}.jpg"
             )
             with open(filepath, "wb") as f:
                 f.write(requests.get(filelink, timeout=20).content)
@@ -496,7 +496,7 @@ def test_coco_video_jsoncontent():
         assert len(labels_json["annotations"]) == 2  # 2 frames with annotations
 
         assert [img["file_name"] for img in labels_json["images"]] == [
-            f"data/video2_{i+1}.jpg" for i in range(5)
+            f"data/video2_{i + 1}.jpg" for i in range(5)
         ]
 
         assert labels_json["annotations"][0]["image_id"] == 2
@@ -733,7 +733,5 @@ def test_coco_export_with_multi_jobs():
             == "DESSERT_JOB/APPLE_PIE"
         )
         assert (
-            categories_by_id[labels_json["annotations"][1]["category_id"]]
-            == "MAIN_JOB/SPAGHETTIS"
+            categories_by_id[labels_json["annotations"][1]["category_id"]] == "MAIN_JOB/SPAGHETTIS"
         )
-

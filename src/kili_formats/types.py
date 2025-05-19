@@ -1,5 +1,15 @@
 from enum import Enum
-from typing import Any, Dict, List, Literal, NamedTuple, NewType, Optional, TypedDict, Union
+from typing import (
+    Any,
+    Dict,
+    List,
+    Literal,
+    NamedTuple,
+    NewType,
+    Optional,
+    TypedDict,
+    Union,
+)
 
 InputType = Literal[
     "GEOSPATIAL", "IMAGE", "LLM_INSTR_FOLLOWING", "LLM_RLHF", "LLM_STATIC", "PDF", "TEXT", "VIDEO"
