@@ -1,5 +1,4 @@
-from kili_export_formats.llm import JobLevel
-
+from kili_formats.format.llm import JobLevel
 
 llm_static_annotations = [
     {

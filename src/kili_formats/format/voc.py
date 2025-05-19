@@ -1,11 +1,13 @@
-from typing import Dict, Sequence
 import xml.etree.ElementTree as ET
+from typing import Dict, Optional, Sequence
 from xml.dom import minidom
 
-from .base import reverse_rotation_vertices
+from kili_formats.tool.base import reverse_rotation_vertices
 
 
-def convert_from_kili_to_voc_format(response: Dict, width: int, height: int, parameters: Dict, valid_jobs: Sequence[str]) -> str:
+def convert_from_kili_to_voc_format(
+    response: Dict, width: int, height: int, parameters: Dict, valid_jobs: Optional[Sequence[str]]
+) -> str:
     xml_label = ET.Element("annotation")
 
     _provide_voc_headers(xml_label, width, height, parameters=parameters)
@@ -15,6 +17,7 @@ def convert_from_kili_to_voc_format(response: Dict, width: int, height: int, par
     xmlstr = minidom.parseString(ET.tostring(xml_label)).toprettyxml(indent="   ")
 
     return xmlstr
+
 
 def _provide_voc_headers(xml_label: ET.Element, width: int, height: int, parameters: Dict) -> None:
     folder = ET.SubElement(xml_label, "folder")
@@ -41,13 +44,20 @@ def _provide_voc_headers(xml_label: ET.Element, width: int, height: int, paramet
     segmented = ET.SubElement(xml_label, "segmented")
     segmented.text = 0  # type: ignore
 
-def _parse_annotations(response: Dict, xml_label: ET.Element, width: int, height:int, valid_jobs: Sequence[str]) -> None:
+
+def _parse_annotations(
+    response: Dict,
+    xml_label: ET.Element,
+    width: int,
+    height: int,
+    valid_jobs: Optional[Sequence[str]],
+) -> None:
     # pylint: disable=too-many-locals
     rotation_val = 0
     if "ROTATION_JOB" in response:
         rotation_val = response["ROTATION_JOB"]["rotation"]
     for job_name, job_response in response.items():
-        if job_name not in valid_jobs:
+        if valid_jobs is not None and job_name not in valid_jobs:
             continue
         if "annotations" in job_response:
             annotations = job_response["annotations"]
@@ -58,6 +68,8 @@ def _parse_annotations(response: Dict, xml_label: ET.Element, width: int, height
                     annotation_category = ET.SubElement(xml_label, "object")
                     name = ET.SubElement(annotation_category, "name")
                     name.text = category["name"]
+                    job_name_xml = ET.SubElement(annotation_category, "job_name")
+                    job_name_xml.text = job_name
                     pose = ET.SubElement(annotation_category, "pose")
                     pose.text = "Unspecified"
                     truncated = ET.SubElement(annotation_category, "truncated")

@@ -1,5 +1,4 @@
-from kili_export_formats.types import ProjectDict
-
+from kili_formats.types import ProjectDict
 
 image_asset = {
     "content": "https://storage.googleapis.com/label-backend-staging/projects/clk8fq8edf38d13",

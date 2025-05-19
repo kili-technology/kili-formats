@@ -1,5 +1,4 @@
-from kili_export_formats.types import ProjectDict
-
+from kili_formats.types import ProjectDict
 
 video_asset = {
     "content": "https://storage.googleapis.com/label-public-staging/demo-projects/video/tuto_video.mp4",
@@ -14,7 +13,7 @@ video_asset = {
             "numberOfFrames": 86,
             "shouldKeepNativeFrameRate": True,
             "shouldUseNativeVideo": True,
-            "startTime": 0
+            "startTime": 0,
         }
     },
     "latestLabel": {
@@ -22,7 +21,7 @@ video_asset = {
             "email": "test+admin+1@kili-technology.com",
             "firstname": "Feat1",
             "id": "user-feat1-1",
-            "lastname": "Test Admin"
+            "lastname": "Test Admin",
         },
         "createdAt": "2023-07-19T08:38:46.356Z",
         "isLatestLabelForUser": True,
@@ -45,34 +44,18 @@ video_asset = {
                             "boundingPoly": [
                                 {
                                     "normalizedVertices": [
-                                        {
-                                            "x": 0.311841531097634,
-                                            "y": 0.6538423037514713
-                                        },
-                                        {
-                                            "x": 0.311841531097634,
-                                            "y": 0.5449016956222676
-                                        },
-                                        {
-                                            "x": 0.40148639384560253,
-                                            "y": 0.5449016956222676
-                                        },
-                                        {
-                                            "x": 0.40148639384560253,
-                                            "y": 0.6538423037514713
-                                        }
+                                        {"x": 0.311841531097634, "y": 0.6538423037514713},
+                                        {"x": 0.311841531097634, "y": 0.5449016956222676},
+                                        {"x": 0.40148639384560253, "y": 0.5449016956222676},
+                                        {"x": 0.40148639384560253, "y": 0.6538423037514713},
                                     ]
                                 }
                             ],
-                            "categories": [
-                                {
-                                    "name": "A"
-                                }
-                            ],
+                            "categories": [{"name": "A"}],
                             "children": {},
                             "isKeyFrame": True,
                             "mid": "20230719103804051-62814",
-                            "type": "rectangle"
+                            "type": "rectangle",
                         }
                     ]
                 }
@@ -84,47 +67,28 @@ video_asset = {
                             "boundingPoly": [
                                 {
                                     "normalizedVertices": [
-                                        {
-                                            "x": 0.3198865828827081,
-                                            "y": 0.5560227160354572
-                                        },
-                                        {
-                                            "x": 0.3198865828827081,
-                                            "y": 0.6672329201673526
-                                        },
-                                        {
-                                            "x": 0.40787135557978826,
-                                            "y": 0.6672329201673526
-                                        },
-                                        {
-                                            "x": 0.40787135557978826,
-                                            "y": 0.5560227160354572
-                                        }
+                                        {"x": 0.3198865828827081, "y": 0.5560227160354572},
+                                        {"x": 0.3198865828827081, "y": 0.6672329201673526},
+                                        {"x": 0.40787135557978826, "y": 0.6672329201673526},
+                                        {"x": 0.40787135557978826, "y": 0.5560227160354572},
                                     ]
                                 }
                             ],
-                            "categories": [
-                                {
-                                    "name": "A"
-                                }
-                            ],
+                            "categories": [{"name": "A"}],
                             "children": {},
                             "isKeyFrame": False,
                             "mid": "20230719103804051-62814",
-                            "type": "rectangle"
+                            "type": "rectangle",
                         }
                     ]
                 }
-            }
+            },
         },
         "labelType": "DEFAULT",
-        "modelName": None
+        "modelName": None,
     },
     "pageResolutions": None,
-    "resolution": {
-        "height": 1080,
-        "width": 1920
-    }
+    "resolution": {"height": 1080, "width": 1920},
 }
 
 video_project: ProjectDict = {
