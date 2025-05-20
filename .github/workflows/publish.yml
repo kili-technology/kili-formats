@@ -29,6 +29,8 @@ jobs:
 
       - name: Test the Build
         run: |
+          python -m pip install . # to install dependencies
+          python -m pip uninstall -y kili-formats
           pip install --find-links=dist --no-index kili-formats
           python -c 'from kili_formats import convert_from_kili_to_voc_format; print("OK")'
 
