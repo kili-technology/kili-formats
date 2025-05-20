@@ -391,22 +391,27 @@ def _object_detection_annotation_to_json_response(
         else {}
     )
 
+    annotation_type = json_interface["jobs"][annotation["job"]]["tools"][0]
+
     annotation_dict = {
         "children": json_resp_child_jobs,
         "categories": [{"name": annotation["category"]}],
         "mid": annotation["mid"],
-        "type": json_interface["jobs"][annotation["job"]]["tools"][0],
+        "type": annotation_type,
     }
 
     norm_vertices = annotation["annotationValue"]["vertices"]
 
-    if json_interface["jobs"][annotation["job"]]["tools"][0] == "marker":
+    if annotation_type == "marker":
         annotation_dict["point"] = norm_vertices[0][0][0]
 
-    elif json_interface["jobs"][annotation["job"]]["tools"][0] in {"polygon", "rectangle"}:
+    elif annotation_type == "polyline":
+        annotation_dict["polyline"] = norm_vertices[0][0]
+
+    elif annotation_type in {"polygon", "rectangle"}:
         annotation_dict["boundingPoly"] = [{"normalizedVertices": norm_vertices[0][0]}]
 
-    elif json_interface["jobs"][annotation["job"]]["tools"][0] == "semantic":
+    elif annotation_type == "semantic":
         annotation_dict["boundingPoly"] = [
             {"normalizedVertices": norm_vert} for norm_vert in norm_vertices[0]
         ]
