@@ -84,7 +84,7 @@ def _scale_label_vertices(label: Dict, asset: Dict, project: ProjectDict, **kwar
                     annotation_scaler=scale_normalized_vertices_image_video_annotation,
                 )
 
-    elif project["inputType"] == "GEOSPATIAL":
+    elif project["inputType"] == "GEOSPATIAL" or project["inputType"] == "TEXT":
         return
 
     else:

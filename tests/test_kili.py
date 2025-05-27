@@ -17,6 +17,7 @@ from .fakes.pdf import (
     pdf_project,
     pdf_project_asset_unnormalized,
 )
+from .fakes.text import text_asset, text_project, text_project_asset_unnormalized
 from .fakes.video import video_asset, video_project, video_project_asset_unnormalized
 
 
@@ -24,6 +25,12 @@ def test_kili_convert_to_pixel_coords_pdf():
     """Test the conversion of coordinates from normalized to pixel values for PDF files."""
     scaled_asset = convert_to_pixel_coords(pdf_asset, pdf_project, normalized_coordinates=False)
     assert scaled_asset == pdf_project_asset_unnormalized
+
+
+def test_kili_convert_to_pixel_coords_text():
+    """Test the conversion of coordinates from normalized to pixel values for PDF files."""
+    scaled_asset = convert_to_pixel_coords(text_asset, text_project, normalized_coordinates=False)
+    assert scaled_asset == text_project_asset_unnormalized
 
 
 def test_kili_convert_to_pixel_coords_pdf_rotated_throw_error():
