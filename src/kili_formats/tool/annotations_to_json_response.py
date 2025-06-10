@@ -645,7 +645,7 @@ def _video_object_detection_annotation_to_json_response(
                 )
 
             if json_interface["jobs"][annotation["job"]]["tools"][0] == "marker":
-                annotation = {
+                single_annotation = {
                     "children": child_jobs_frame_json_resp,
                     "isKeyFrame": frame_id == key_ann_frame,
                     "categories": [{"name": annotation["category"]}],
@@ -655,7 +655,7 @@ def _video_object_detection_annotation_to_json_response(
                 }
                 json_resp[str(frame_id)].setdefault(annotation["job"], {}).setdefault(
                     "annotations", []
-                ).append(annotation)
+                ).append(single_annotation)
 
             elif json_interface["jobs"][annotation["job"]]["tools"][0] in {"polygon", "semantic", "rectangle"}:
                 annotations = [{
