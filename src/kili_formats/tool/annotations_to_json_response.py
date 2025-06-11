@@ -15,6 +15,7 @@ from typing import (
     overload,
 )
 
+from kili_formats.media.video import get_video_and_frame_dimensions
 from kili_formats.types import (
     ClassicAnnotation,
     ClassificationAnnotation,
@@ -87,10 +88,9 @@ class AnnotationsToJsonResponseConverter:
 
     def patch_label_json_response(
         self,
+        asset: Dict,
         label: Dict,
         annotations: Union[List[VideoAnnotation], List[ClassicAnnotation]],
-        width: int,
-        height: int,
     ) -> None:
         """Patch the label json response using the annotations.
 
@@ -102,6 +102,7 @@ class AnnotationsToJsonResponseConverter:
 
             if self._project_input_type == "VIDEO":
                 annotations = cast(List[VideoAnnotation], annotations)
+                width, height = get_video_and_frame_dimensions(asset)
                 converted_json_resp = _video_annotations_to_json_response(
                     annotations=annotations,
                     json_interface=self._project_json_interface,
@@ -109,7 +110,6 @@ class AnnotationsToJsonResponseConverter:
                     height=height,
                 )
             else:
-                print("converting annotations")
                 annotations = cast(List[ClassicAnnotation], annotations)
                 converted_json_resp = _classic_annotations_to_json_response(
                     annotations=annotations, json_interface=self._project_json_interface
