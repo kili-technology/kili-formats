@@ -4,16 +4,18 @@ import os
 import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
+
+from kili_formats.exceptions import NotExportableAssetError
+
+if TYPE_CHECKING:
+    import ffmpeg
 
 ffmpeg_installed = True
 try:
     import ffmpeg
 except ImportError:
     ffmpeg_installed = False
-
-
-from kili_formats.exceptions import NotExportableAssetError
 
 
 class FFmpegError(Exception):

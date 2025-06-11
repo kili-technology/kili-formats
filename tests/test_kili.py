@@ -2,8 +2,10 @@ import pytest
 
 from kili_formats.exceptions import NotCompatibleOptions
 from kili_formats.kili import convert_to_pixel_coords
+from src.kili_formats.tool.annotations_to_json_response import (
+    AnnotationsToJsonResponseConverter,
+)
 
-from src.kili_formats.tool.annotations_to_json_response import AnnotationsToJsonResponseConverter
 from .fakes.image import (
     image_asset,
     image_asset_rotated,
@@ -19,7 +21,12 @@ from .fakes.pdf import (
     pdf_project_asset_unnormalized,
 )
 from .fakes.text import text_asset, text_project, text_project_asset_unnormalized
-from .fakes.video import video_asset, video_project, video_project_asset_unnormalized, test_cases
+from .fakes.video import (
+    test_cases,
+    video_asset,
+    video_project,
+    video_project_asset_unnormalized,
+)
 
 
 def test_kili_convert_to_pixel_coords_pdf():
@@ -67,18 +74,18 @@ def test_kili_convert_to_pixel_coords_image_rotated():
 
 
 @pytest.mark.parametrize(
-    "json_interface, latest_label_annotations, expected_latest_label_result",
-    test_cases
+    "json_interface, latest_label_annotations, expected_latest_label_result", test_cases
 )
-def test_video_object_detection_annotation_to_json_response(json_interface,
-                                                            latest_label_annotations,
-                                                            expected_latest_label_result):
-    """Test the conversion from annotations to jsonResponse"""
+def test_video_object_detection_annotation_to_json_response(
+    json_interface, latest_label_annotations, expected_latest_label_result
+):
+    """Test the conversion from annotations to jsonResponse."""
     converter = AnnotationsToJsonResponseConverter(
         json_interface=json_interface,
         project_input_type="VIDEO",
     )
-    converter.patch_label_json_response(latest_label_annotations,
-                                        latest_label_annotations["annotations"])
+    converter.patch_label_json_response(
+        latest_label_annotations, latest_label_annotations["annotations"]
+    )
     del latest_label_annotations["annotations"]
     assert expected_latest_label_result == latest_label_annotations
