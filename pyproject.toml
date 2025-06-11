@@ -7,9 +7,7 @@ license = { file = "LICENSE.txt" }
 requires-python = ">=3.8"
 readme = "README.md"
 dependencies = [
-  "ffmpeg-python >= 0.2.0, < 0.3.0",
-  "Pillow >=9.0.0, <11.0.0",
-  "shapely >= 1.8, < 3",
+  "typing-extensions >= 4.1.0, < 5.0.0"
 ]
 
 [build-system]
@@ -23,7 +21,23 @@ dev = [
   # linting
   "pre-commit >= 3.3.0, < 4.0.0",
   "pylint ==3.0.3",
-  "pyright ==1.1.347"
+  "pyright ==1.1.347",
+  # optional dependencies - coco
+  "shapely >= 1.8, < 3",
+  # optional dependencies - image
+  "Pillow >=9.0.0, <11.0.0",
+  # optional dependencies - video
+  "ffmpeg-python >= 0.2.0, < 0.3.0"
+]
+coco = [
+  "numpy >= 2, < 3",
+  "shapely >= 1.8, < 3"
+]
+image = [
+  "Pillow >=9.0.0, <11.0.0"
+]
+video = [
+  "ffmpeg-python >= 0.2.0, < 0.3.0"
 ]
 
 [tool.black]

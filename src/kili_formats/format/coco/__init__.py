@@ -3,10 +3,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-import numpy as np
-from shapely.geometry import Polygon
-from shapely.ops import polygonize
-from shapely.validation import make_valid
+coco_installed = True
+try:
+    from shapely.geometry import Polygon
+    from shapely.ops import polygonize
+    from shapely.validation import make_valid
+    import numpy as np
+except ImportError:
+    coco_installed = False
 
 from kili_formats.media.image import get_frame_dimensions, get_image_dimensions
 from kili_formats.media.video import cut_video, get_video_dimensions
@@ -46,6 +50,8 @@ def convert_from_kili_to_coco_format(
 
     Note: the jobs should only contains elligible jobs.
     """
+    if not coco_installed:
+        raise ImportError("Install with `pip install kili-formats[coco]` to use this feature.")
     infos_coco = {
         "year": time.strftime("%Y"),
         "version": "1.0",
