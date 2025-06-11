@@ -1,3 +1,6 @@
+"""
+This module defines types and data structures used in Kili's annotation and job management system.
+"""
 from enum import Enum
 from typing import (
     Any,
@@ -59,6 +62,8 @@ class Job(TypedDict):
 
 
 class ProjectDict(TypedDict):
+    """Dict that represents a Project."""
+
     description: str
     id: str
     inputType: InputType
@@ -116,6 +121,8 @@ class ExportLLMItem(TypedDict):
 
 
 class JobLevel:
+    """Job level."""
+
     ROUND = "round"
     CONVERSATION = "conversation"
     COMPLETION = "completion"

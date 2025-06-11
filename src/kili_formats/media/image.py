@@ -3,13 +3,15 @@
 from pathlib import Path
 from typing import Dict, Tuple
 
-from PIL import Image
-
 from kili_formats.exceptions import NotExportableAssetError
 
 
 def _get_image_dimensions(filepath: str) -> Tuple:
     """Get an image width and height."""
+    try:
+        from PIL import Image
+    except ImportError:
+        raise ImportError("Install with `pip install kili-formats[image]` to use this feature.")
     image = Image.open(filepath)
     return image.size
 

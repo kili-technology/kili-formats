@@ -1,12 +1,7 @@
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
-
-import numpy as np
-from shapely.geometry import Polygon
-from shapely.ops import polygonize
-from shapely.validation import make_valid
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from kili_formats.media.image import get_frame_dimensions, get_image_dimensions
 from kili_formats.media.video import cut_video, get_video_dimensions
@@ -21,6 +16,21 @@ from .types import (
     CocoImage,
 )
 
+if TYPE_CHECKING:
+    import numpy as np
+    from shapely.geometry import Polygon
+    from shapely.ops import polygonize
+    from shapely.validation import make_valid
+
+coco_installed = True
+try:
+    import numpy as np
+    from shapely.geometry import Polygon
+    from shapely.ops import polygonize
+    from shapely.validation import make_valid
+except ImportError:
+    coco_installed = False
+
 DATA_SUBDIR = "data"
 
 
@@ -32,7 +42,7 @@ def convert_from_kili_to_coco_format(
     project_input_type: str,
     annotation_modifier: Optional[CocoAnnotationModifier],
     merged: bool,
-) -> Tuple[CocoFormat]:
+) -> CocoFormat:
     """Creates the following structure on the disk.
 
     <dataset_dir>/
@@ -46,6 +56,8 @@ def convert_from_kili_to_coco_format(
 
     Note: the jobs should only contains elligible jobs.
     """
+    if not coco_installed:
+        raise ImportError("Install with `pip install kili-formats[coco]` to use this feature.")
     infos_coco = {
         "year": time.strftime("%Y"),
         "version": "1.0",

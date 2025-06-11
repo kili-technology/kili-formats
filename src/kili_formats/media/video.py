@@ -4,11 +4,18 @@ import os
 import shutil
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Dict, List, Optional, Tuple
-
-import ffmpeg
+from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 from kili_formats.exceptions import NotExportableAssetError
+
+if TYPE_CHECKING:
+    import ffmpeg
+
+ffmpeg_installed = True
+try:
+    import ffmpeg
+except ImportError:
+    ffmpeg_installed = False
 
 
 class FFmpegError(Exception):
@@ -17,6 +24,8 @@ class FFmpegError(Exception):
 
 def get_video_dimensions(asset: Dict) -> Tuple:
     """Get a video width and height."""
+    if not ffmpeg_installed:
+        raise ImportError("Install with `pip install kili-formats[video]` to use this feature.")
     if "resolution" in asset and asset["resolution"] is not None:
         return (asset["resolution"]["width"], asset["resolution"]["height"])
 
@@ -38,6 +47,8 @@ def cut_video(
     video_path: Path, asset: Dict, leading_zeros: int, output_dir: Optional[Path]
 ) -> List[Path]:
     """Download and cut video into frames."""
+    if not ffmpeg_installed:
+        raise ImportError("Install with `pip install kili-formats[video]` to use this feature.")
     output_dir = output_dir or video_path.parent
     output_dir.mkdir(parents=True, exist_ok=True)
 

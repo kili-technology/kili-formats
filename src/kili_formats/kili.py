@@ -1,3 +1,7 @@
+"""
+Utility functions to handle JSON responses and asset labels.
+"""
+
 from typing import Callable, Dict
 
 from .exceptions import NotCompatibleInputType
@@ -7,6 +11,7 @@ from .types import ProjectDict
 
 
 def clean_json_response(asset: Dict):
+    """Remove ROTATION_JOB from the asset JSON response."""
     if asset.get("latestLabel", {}) and asset["latestLabel"].get("jsonResponse", {}):
         if "ROTATION_JOB" in asset["latestLabel"]["jsonResponse"]:
             asset["latestLabel"]["jsonResponse"].pop("ROTATION_JOB")
@@ -108,7 +113,7 @@ def _scale_json_response_vertices(
 
 def _can_scale_vertices_for_job_name(job_name: str, project: ProjectDict) -> bool:
     if project["jsonInterface"] is None:
-        raise Exception("No json interface found in project")
+        raise ValueError("No json interface found in project")
     return (
         # some old labels might not up to date with the json interface
         job_name in project["jsonInterface"]["jobs"]

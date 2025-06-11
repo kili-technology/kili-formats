@@ -651,26 +651,34 @@ def _video_object_detection_annotation_to_json_response(
                     "categories": [{"name": annotation["category"]}],
                     "mid": annotation["mid"],
                     "type": json_interface["jobs"][annotation["job"]]["tools"][0],
-                    "point": norm_vertices[0][0][0]
+                    "point": norm_vertices[0][0][0],
                 }
                 json_resp[str(frame_id)].setdefault(annotation["job"], {}).setdefault(
                     "annotations", []
                 ).append(single_annotation)
 
-            elif json_interface["jobs"][annotation["job"]]["tools"][0] in {"polygon", "semantic", "rectangle"}:
-                annotations = [{
-                    "children": child_jobs_frame_json_resp,
-                    "isKeyFrame": frame_id == key_ann_frame,
-                    "categories": [{"name": annotation["category"]}],
-                    "mid": annotation["mid"],
-                    "type": json_interface["jobs"][annotation["job"]]["tools"][0],
-                    "boundingPoly": [{"normalizedVertices": polygon} for polygon in multipart_polygon]
-                } for multipart_polygon in norm_vertices]
+            elif json_interface["jobs"][annotation["job"]]["tools"][0] in {
+                "polygon",
+                "semantic",
+                "rectangle",
+            }:
+                annotations = [
+                    {
+                        "children": child_jobs_frame_json_resp,
+                        "isKeyFrame": frame_id == key_ann_frame,
+                        "categories": [{"name": annotation["category"]}],
+                        "mid": annotation["mid"],
+                        "type": json_interface["jobs"][annotation["job"]]["tools"][0],
+                        "boundingPoly": [
+                            {"normalizedVertices": polygon} for polygon in multipart_polygon
+                        ],
+                    }
+                    for multipart_polygon in norm_vertices
+                ]
 
                 json_resp[str(frame_id)].setdefault(annotation["job"], {}).setdefault(
                     "annotations", []
                 ).extend(annotations)
-
 
     return json_resp
 
