@@ -14,6 +14,15 @@ dependencies = [
 requires = ["setuptools", "wheel"]
 
 [project.optional-dependencies]
+all = [
+  # coco
+  "numpy >= 2, < 3",
+  "shapely >= 1.8, < 3",
+  # image
+  "Pillow >=9.0.0, <11.0.0",
+  # video
+  "ffmpeg-python >= 0.2.0, < 0.3.0"
+]
 dev = [
   # tests
   "pytest",
