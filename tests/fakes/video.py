@@ -267,6 +267,88 @@ video_project_asset_unnormalized = {
     "pageResolutions": None,
     "resolution": {"height": 1080, "width": 1920},
 }
+latest_label_annotations_rectangle_rotated = {
+    "annotations": [
+        {
+            "__typename": "VideoObjectDetectionAnnotation",
+            "id": "20250611172432110-2",
+            "job": "JOB_0",
+            "path": [],
+            "labelId": "cmbs3q9ie001n8m9kf78bg0xy",
+            "frames": [{"end": 10, "start": 0}],
+            "keyAnnotations": [
+                {
+                    "frame": 0,
+                    "id": "20250611172432110-2-0",
+                    "annotationValue": {
+                        "vertices": [
+                            [
+                                [
+                                    {"x": 0.38151816589866916, "y": 0.7515395920400955},
+                                    {"x": 0.36739440026464604, "y": 0.591311803253454},
+                                    {"x": 0.4939204305925588, "y": 0.5560627471411912},
+                                    {"x": 0.5080441962265819, "y": 0.7162905359278327},
+                                ]
+                            ]
+                        ]
+                    },
+                },
+                {
+                    "frame": 6,
+                    "id": "20250611172432110-2-6",
+                    "annotationValue": {
+                        "vertices": [
+                            [
+                                [
+                                    {"x": 0.4473684210526316, "y": 0.6816778376334383},
+                                    {"x": 0.43664287285794606, "y": 0.5441606027764878},
+                                    {"x": 0.33269774529216684, "y": 0.5697470957157564},
+                                    {"x": 0.34334115959042594, "y": 0.7059936085567078},
+                                ]
+                            ]
+                        ]
+                    },
+                },
+                {
+                    "frame": 14,
+                    "id": "20250611172432110-2-14",
+                    "annotationValue": {
+                        "vertices": [
+                            [
+                                [
+                                    {"x": 0.29844705572561797, "y": 0.6693395360404346},
+                                    {"x": 0.28771929824561404, "y": 0.5475906182543382},
+                                    {"x": 0.37723354629347966, "y": 0.5232757552197771},
+                                    {"x": 0.387719298245614, "y": 0.644258148504387},
+                                ]
+                            ]
+                        ]
+                    },
+                },
+            ],
+            "category": "OBJECT_B",
+            "mid": "20250611172428468-1",
+            "name": "Car 1",
+        }
+    ],
+    "author": {
+        "email": "test+admin@kili-technology.com",
+        "firstname": "Test",
+        "id": "user-1",
+        "lastname": "Admin",
+    },
+    "createdAt": "2025-06-11T15:25:32.966Z",
+    "isLatestLabelForUser": True,
+    "isSentBackToQueue": False,
+    "jsonResponse": {
+        "0": {
+            "ANNOTATION_JOB_COUNTER": {"JOB_0": {"OBJECT_B": 1}},
+            "ANNOTATION_NAMES_JOB": {"20250611172428468-1": "Car 1"},
+        }
+    },
+    "labelType": "DEFAULT",
+    "modelName": None,
+}
 latest_label_annotations_rectangle = {
     "annotations": [
         {
@@ -715,6 +797,458 @@ expected_latest_label_result_rectangle = {
     "labelType": "DEFAULT",
     "modelName": None,
 }
+expected_latest_label_result_rectangle_rotated = {
+    "author": {
+        "email": "test+admin@kili-technology.com",
+        "firstname": "Test",
+        "id": "user-1",
+        "lastname": "Admin",
+    },
+    "createdAt": "2025-06-11T15:25:32.966Z",
+    "isLatestLabelForUser": True,
+    "isSentBackToQueue": False,
+    "jsonResponse": {
+        "0": {
+            "ANNOTATION_JOB_COUNTER": {
+                "JOB_0": {
+                    "OBJECT_B": 1,
+                }
+            },
+            "ANNOTATION_NAMES_JOB": {
+                "20250611172428468-1": "Car 1",
+            },
+            "JOB_0": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.38151816589866916,
+                                        "y": 0.7515395920400955,
+                                    },
+                                    {
+                                        "x": 0.36739440026464604,
+                                        "y": 0.591311803253454,
+                                    },
+                                    {
+                                        "x": 0.4939204305925588,
+                                        "y": 0.5560627471411912,
+                                    },
+                                    {
+                                        "x": 0.5080441962265819,
+                                        "y": 0.7162905359278327,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "OBJECT_B",
+                            },
+                        ],
+                        "children": {},
+                        "isKeyFrame": True,
+                        "mid": "20250611172428468-1",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "1": {
+            "JOB_0": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.5519165866947012,
+                                        "y": 0.7025939844520813,
+                                    },
+                                    {
+                                        "x": 0.430471751501098,
+                                        "y": 0.5618829162905962,
+                                    },
+                                    {
+                                        "x": 0.307612915789384,
+                                        "y": 0.5954336667545235,
+                                    },
+                                    {
+                                        "x": 0.4290577509829872,
+                                        "y": 0.7361447349160086,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "OBJECT_B",
+                            },
+                        ],
+                        "children": {},
+                        "isKeyFrame": False,
+                        "mid": "20250611172428468-1",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "2": {
+            "JOB_0": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.539589038930231,
+                                        "y": 0.6970962577496009,
+                                    },
+                                    {
+                                        "x": 0.42318349062154,
+                                        "y": 0.5594694300718758,
+                                    },
+                                    {
+                                        "x": 0.30403136954671167,
+                                        "y": 0.5913567054823222,
+                                    },
+                                    {
+                                        "x": 0.4204369178554027,
+                                        "y": 0.7289835331600473,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "OBJECT_B",
+                            },
+                        ],
+                        "children": {},
+                        "isKeyFrame": False,
+                        "mid": "20250611172428468-1",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "3": {
+            "JOB_0": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.5272892633106142,
+                                        "y": 0.6915631160060605,
+                                    },
+                                    {
+                                        "x": 0.4158286875862567,
+                                        "y": 0.5570562843319565,
+                                    },
+                                    {
+                                        "x": 0.30042205115918563,
+                                        "y": 0.5873151592511807,
+                                    },
+                                    {
+                                        "x": 0.4118826268835432,
+                                        "y": 0.7218219909252847,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "OBJECT_B",
+                            },
+                        ],
+                        "children": {},
+                        "isKeyFrame": False,
+                        "mid": "20250611172428468-1",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "4": {
+            "JOB_0": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.5150179801892442,
+                                        "y": 0.6859947625709126,
+                                    },
+                                    {
+                                        "x": 0.4084073764200846,
+                                        "y": 0.5546430362481952,
+                                    },
+                                    {
+                                        "x": 0.2967842402734132,
+                                        "y": 0.5833088247116466,
+                                    },
+                                    {
+                                        "x": 0.4033948440425727,
+                                        "y": 0.714660551034364,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "OBJECT_B",
+                            },
+                        ],
+                        "children": {},
+                        "isKeyFrame": False,
+                        "mid": "20250611172428468-1",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "5": {
+            "JOB_0": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.5027759059289272,
+                                        "y": 0.6803914049788155,
+                                    },
+                                    {
+                                        "x": 0.40091959942739885,
+                                        "y": 0.5522292433304743,
+                                    },
+                                    {
+                                        "x": 0.29311722052658734,
+                                        "y": 0.579337494329062,
+                                    },
+                                    {
+                                        "x": 0.3949735270281157,
+                                        "y": 0.7074996559774032,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "OBJECT_B",
+                            },
+                        ],
+                        "children": {},
+                        "isKeyFrame": False,
+                        "mid": "20250611172428468-1",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "6": {
+            "JOB_0": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.4473684210526316,
+                                        "y": 0.6816778376334383,
+                                    },
+                                    {
+                                        "x": 0.43664287285794606,
+                                        "y": 0.5441606027764878,
+                                    },
+                                    {
+                                        "x": 0.33269774529216684,
+                                        "y": 0.5697470957157564,
+                                    },
+                                    {
+                                        "x": 0.34334115959042594,
+                                        "y": 0.7059936085567078,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "OBJECT_B",
+                            },
+                        ],
+                        "children": {},
+                        "isKeyFrame": True,
+                        "mid": "20250611172428468-1",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "7": {
+            "JOB_0": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.28359980844570865,
+                                        "y": 0.5727403060372047,
+                                    },
+                                    {
+                                        "x": 0.3812628911654557,
+                                        "y": 0.6966964942357857,
+                                    },
+                                    {
+                                        "x": 0.4833879116673934,
+                                        "y": 0.6712376064881812,
+                                    },
+                                    {
+                                        "x": 0.38572482894764637,
+                                        "y": 0.5472814182896002,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "OBJECT_B",
+                            },
+                        ],
+                        "children": {},
+                        "isKeyFrame": False,
+                        "mid": "20250611172428468-1",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "8": {
+            "JOB_0": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.27820592361298063,
+                                        "y": 0.5700196741972453,
+                                    },
+                                    {
+                                        "x": 0.37539401352941115,
+                                        "y": 0.6918335012755875,
+                                    },
+                                    {
+                                        "x": 0.4757033502684251,
+                                        "y": 0.666511217504332,
+                                    },
+                                    {
+                                        "x": 0.3785152603519946,
+                                        "y": 0.5446973904259896,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "OBJECT_B",
+                            },
+                        ],
+                        "children": {},
+                        "isKeyFrame": False,
+                        "mid": "20250611172428468-1",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "9": {
+            "JOB_0": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.27282648312092234,
+                                        "y": 0.5672919317750155,
+                                    },
+                                    {
+                                        "x": 0.36950615857353797,
+                                        "y": 0.686968640667589,
+                                    },
+                                    {
+                                        "x": 0.46800434452878714,
+                                        "y": 0.6617919391027532,
+                                    },
+                                    {
+                                        "x": 0.3713246690761715,
+                                        "y": 0.5421152302101796,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "OBJECT_B",
+                            },
+                        ],
+                        "children": {},
+                        "isKeyFrame": False,
+                        "mid": "20250611172428468-1",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "10": {
+            "JOB_0": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.2674613937218017,
+                                        "y": 0.5645570248326202,
+                                    },
+                                    {
+                                        "x": 0.3635993101129763,
+                                        "y": 0.6821019872841423,
+                                    },
+                                    {
+                                        "x": 0.46029098769621146,
+                                        "y": 0.6570798252213398,
+                                    },
+                                    {
+                                        "x": 0.3641530713050369,
+                                        "y": 0.5395348627698177,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "OBJECT_B",
+                            },
+                        ],
+                        "children": {},
+                        "isKeyFrame": False,
+                        "mid": "20250611172428468-1",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+    },
+    "labelType": "DEFAULT",
+    "modelName": None,
+}
 expected_latest_label_result_semantic = {
     "author": {
         "email": "test+admin@kili-technology.com",
@@ -1109,6 +1643,11 @@ test_cases = [
         json_interface_rectangle,
         latest_label_annotations_rectangle,
         expected_latest_label_result_rectangle,
+    ),
+    (
+        json_interface_rectangle,
+        latest_label_annotations_rectangle_rotated,
+        expected_latest_label_result_rectangle_rotated,
     ),
     (
         json_interface_polygon,

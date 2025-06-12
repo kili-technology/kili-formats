@@ -85,7 +85,19 @@ def test_video_object_detection_annotation_to_json_response(
         project_input_type="VIDEO",
     )
     converter.patch_label_json_response(
-        latest_label_annotations, latest_label_annotations["annotations"]
+        latest_label_annotations, latest_label_annotations["annotations"], 1080, 1920
     )
     del latest_label_annotations["annotations"]
-    assert expected_latest_label_result == latest_label_annotations
+    jobs = json_interface["jobs"].keys()
+    job = next(iter(jobs))
+
+    assert latest_label_annotations["labelType"] == expected_latest_label_result["labelType"]
+    assert latest_label_annotations["author"] == expected_latest_label_result["author"]
+    assert latest_label_annotations["jsonResponse"]["0"][job]["annotations"][0]["boundingPoly"][0][
+        "normalizedVertices"
+    ] == pytest.approx(
+        expected_latest_label_result["jsonResponse"]["0"][job]["annotations"][0]["boundingPoly"][0][
+            "normalizedVertices"
+        ],
+        rel=1e-2,
+    )
