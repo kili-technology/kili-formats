@@ -15,6 +15,7 @@ from typing import (
     overload,
 )
 
+from kili_formats.media.video import get_video_and_frame_dimensions
 from kili_formats.types import (
     ClassicAnnotation,
     ClassificationAnnotation,
@@ -34,6 +35,32 @@ from kili_formats.types import (
 )
 
 ASSET_LEVEL_KEY = "assetLevel"
+
+
+def convert_from_normalized_to_absolute(
+    vertices: List[Vertice], width: int, height: int
+) -> List[Vertice]:
+    """Convert normalized vertices to absolute coordinates."""
+    return [
+        Vertice(
+            x=vertex["x"] * width,
+            y=vertex["y"] * height,
+        )
+        for vertex in vertices
+    ]
+
+
+def convert_from_absolute_to_normalized(
+    vertices: List[Vertice], width: int, height: int
+) -> List[Vertice]:
+    """Convert absolute vertices to normalized coordinates."""
+    return [
+        Vertice(
+            x=vertex["x"] / width,
+            y=vertex["y"] / height,
+        )
+        for vertex in vertices
+    ]
 
 
 class AnnotationsToJsonResponseConverter:
@@ -60,7 +87,10 @@ class AnnotationsToJsonResponseConverter:
         return False
 
     def patch_label_json_response(
-        self, label: Dict, annotations: Union[List[VideoAnnotation], List[ClassicAnnotation]]
+        self,
+        asset: Dict,
+        label: Dict,
+        annotations: Union[List[VideoAnnotation], List[ClassicAnnotation]],
     ) -> None:
         """Patch the label json response using the annotations.
 
@@ -72,11 +102,14 @@ class AnnotationsToJsonResponseConverter:
 
             if self._project_input_type == "VIDEO":
                 annotations = cast(List[VideoAnnotation], annotations)
+                width, height = get_video_and_frame_dimensions(asset)
                 converted_json_resp = _video_annotations_to_json_response(
-                    annotations=annotations, json_interface=self._project_json_interface
+                    annotations=annotations,
+                    json_interface=self._project_json_interface,
+                    width=width,
+                    height=height,
                 )
             else:
-                print("converting annotations")
                 annotations = cast(List[ClassicAnnotation], annotations)
                 converted_json_resp = _classic_annotations_to_json_response(
                     annotations=annotations, json_interface=self._project_json_interface
@@ -107,7 +140,7 @@ def _fill_empty_frames(json_response: Dict) -> None:
 
 
 def _video_annotations_to_json_response(
-    annotations: List[VideoAnnotation], json_interface: Dict
+    annotations: List[VideoAnnotation], json_interface: Dict, width: int, height: int
 ) -> Dict[str, Dict[JobName, Dict]]:
     """Convert video label annotations to a video json response."""
     json_resp = defaultdict(dict)
@@ -126,7 +159,7 @@ def _video_annotations_to_json_response(
         elif ann["__typename"] == "VideoObjectDetectionAnnotation":
             ann = cast(VideoObjectDetectionAnnotation, ann)
             ann_json_resp = _video_object_detection_annotation_to_json_response(
-                ann, other_annotations, json_interface=json_interface
+                ann, other_annotations, json_interface=json_interface, width=width, height=height
             )
             for frame_id, frame_json_resp in ann_json_resp.items():
                 for job_name, job_resp in frame_json_resp.items():
@@ -605,6 +638,8 @@ def _video_object_detection_annotation_to_json_response(
     annotation: VideoObjectDetectionAnnotation,
     other_annotations: List[VideoAnnotation],
     json_interface: Dict,
+    width: int,
+    height: int,
 ) -> Dict[str, Dict[JobName, Dict]]:
     # get the child annotations of the current annotation
     # and compute the json response of those child jobs
@@ -642,6 +677,8 @@ def _video_object_detection_annotation_to_json_response(
                     object_final_state=object_final_state,
                     final_state_frame_index=next_key_ann["frame"],
                     at_frame=frame_id,
+                    width=width,
+                    height=height,
                 )
 
             if json_interface["jobs"][annotation["job"]]["tools"][0] == "marker":
@@ -691,6 +728,8 @@ def _interpolate_object(
     object_final_state: List[List[List[Vertice]]],
     final_state_frame_index: int,
     at_frame: int,
+    width: int,
+    height: int,
 ) -> List[List[List[Vertice]]]:
     """Interpolate an object between two key frames."""
     # if the two frames are consecutive, we do not interpolate
@@ -723,6 +762,8 @@ def _interpolate_object(
                     next_vertices=object_final_state[0][0],
                     weight=(at_frame - initial_state_frame_index)
                     / (final_state_frame_index - initial_state_frame_index),
+                    width=width,
+                    height=height,
                 )
             ]
         ]
@@ -749,6 +790,8 @@ def _interpolate_rectangle(
     previous_vertices: List[Vertice],
     next_vertices: List[Vertice],
     weight: float,
+    width: int,
+    height: int,
 ) -> List[Vertice]:
     """Interpolate a rectangle.
 
@@ -758,9 +801,19 @@ def _interpolate_rectangle(
     The interpolated properties are used to reconstruct the vertices of the interpolated rectangle,
     which are then converted back to normalized coordinates.
     """
-    permuted_new_vertices = _find_rectangle_vertices_bijection(previous_vertices, next_vertices)
 
-    previous_rectangle_properties = _find_rectangle_properties(previous_vertices)
+    previous_absolute_vertices = convert_from_normalized_to_absolute(
+        previous_vertices, height=height, width=width
+    )
+    next_absolute_vertices = convert_from_normalized_to_absolute(
+        next_vertices, height=height, width=width
+    )
+
+    permuted_new_vertices = _find_rectangle_vertices_bijection(
+        previous_absolute_vertices, next_absolute_vertices
+    )
+
+    previous_rectangle_properties = _find_rectangle_properties(previous_absolute_vertices)
     next_rectangle_properties = _find_rectangle_properties(permuted_new_vertices)
 
     interpolated_angle = _interpolate_angle(
@@ -787,7 +840,11 @@ def _interpolate_rectangle(
         interpolated_rectangle_properties
     )
 
-    return interpolated_rectangle
+    interpolated_vertices = convert_from_absolute_to_normalized(
+        interpolated_rectangle, height=height, width=width
+    )
+
+    return interpolated_vertices
 
 
 def _find_rectangle_vertices_bijection(

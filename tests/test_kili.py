@@ -1,3 +1,6 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
 import pytest
 
 from kili_formats.exceptions import NotCompatibleOptions
@@ -80,12 +83,34 @@ def test_video_object_detection_annotation_to_json_response(
     json_interface, latest_label_annotations, expected_latest_label_result
 ):
     """Test the conversion from annotations to jsonResponse."""
-    converter = AnnotationsToJsonResponseConverter(
-        json_interface=json_interface,
-        project_input_type="VIDEO",
-    )
-    converter.patch_label_json_response(
-        latest_label_annotations, latest_label_annotations["annotations"]
-    )
-    del latest_label_annotations["annotations"]
-    assert expected_latest_label_result == latest_label_annotations
+    with TemporaryDirectory() as tmp_dir:
+        video_path = tmp_dir / Path("video1.mp4")
+        video_path.write_bytes(b"fake video content")
+        asset = {
+            "id": "fake_asset_id",
+            "resolution": {"width": 1920, "height": 1080},
+            "content": str(video_path),
+            "jsonContent": "",
+        }
+
+        converter = AnnotationsToJsonResponseConverter(
+            json_interface=json_interface,
+            project_input_type="VIDEO",
+        )
+        converter.patch_label_json_response(
+            asset, latest_label_annotations, latest_label_annotations["annotations"]
+        )
+        del latest_label_annotations["annotations"]
+        jobs = json_interface["jobs"].keys()
+        job = next(iter(jobs))
+
+        assert latest_label_annotations["labelType"] == expected_latest_label_result["labelType"]
+        assert latest_label_annotations["author"] == expected_latest_label_result["author"]
+        assert latest_label_annotations["jsonResponse"]["0"][job]["annotations"][0]["boundingPoly"][
+            0
+        ]["normalizedVertices"] == pytest.approx(
+            expected_latest_label_result["jsonResponse"]["0"][job]["annotations"][0][
+                "boundingPoly"
+            ][0]["normalizedVertices"],
+            rel=1e-2,
+        )

@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 from kili_formats.exceptions import NotExportableAssetError
+from kili_formats.media.image import get_frame_dimensions
 
 if TYPE_CHECKING:
     import ffmpeg
@@ -20,6 +21,28 @@ except ImportError:
 
 class FFmpegError(Exception):
     """Errors related to ffmpeg."""
+
+
+def get_video_and_frame_dimensions(
+    asset: Dict,
+) -> Tuple[int, int]:
+    """Get a video width and height, and a frame width and height."""
+    width = height = 0
+    if asset["resolution"] is not None:
+        width = asset["resolution"]["width"]
+        height = asset["resolution"]["height"]
+        return width, height
+    if isinstance(asset["jsonContent"], list) and Path(asset["jsonContent"][0]).is_file():
+        width, height = get_frame_dimensions(asset)
+    elif Path(asset["content"]).is_file():
+        width, height = get_video_dimensions(asset)
+    else:
+        raise NotExportableAssetError(
+            f"Could not find video dimensions for asset with externalId '{asset['externalId']}'. Please"
+            " use `kili.update_properties_in_assets()` to update the resolution of your asset. Or use"
+            " `kili.export_labels(with_assets=True).`"
+        )
+    return width, height
 
 
 def get_video_dimensions(asset: Dict) -> Tuple:
