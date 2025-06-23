@@ -28,7 +28,7 @@ def get_video_and_frame_dimensions(
 ) -> Tuple[int, int]:
     """Get a video width and height, and a frame width and height."""
     width = height = 0
-    if asset["resolution"] is not None:
+    if "resolution" in asset and asset["resolution"] is not None:
         width = asset["resolution"]["width"]
         height = asset["resolution"]["height"]
         return width, height
