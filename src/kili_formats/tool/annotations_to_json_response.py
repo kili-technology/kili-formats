@@ -88,7 +88,7 @@ class AnnotationsToJsonResponseConverter:
 
     def patch_label_json_response(
         self,
-        asset: Dict,
+        asset: Optional[Dict],
         label: Dict,
         annotations: Union[List[VideoAnnotation], List[ClassicAnnotation]],
     ) -> None:
@@ -102,6 +102,10 @@ class AnnotationsToJsonResponseConverter:
 
             if self._project_input_type == "VIDEO":
                 annotations = cast(List[VideoAnnotation], annotations)
+                if not asset:
+                    raise ValueError(
+                        "Asset is required for video annotations to compute dimensions."
+                    )
                 width, height = get_video_and_frame_dimensions(asset)
                 converted_json_resp = _video_annotations_to_json_response(
                     annotations=annotations,
