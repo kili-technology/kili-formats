@@ -450,7 +450,8 @@ def _object_detection_annotation_to_json_response(
 
     elif annotation_type == "semantic":
         annotation_dict["boundingPoly"] = [
-            {"normalizedVertices": norm_vert} for norm_vert in norm_vertices[0]
+            [{"normalizedVertices": norm_vert} for norm_vert in polygon_group]
+            for polygon_group in norm_vertices
         ]
 
     return {

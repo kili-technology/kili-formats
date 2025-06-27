@@ -28,7 +28,7 @@ from .polygon import (
 from .segmentation import (
     geojson_polygon_feature_to_kili_segmentation_annotation,
     kili_segmentation_annotation_to_geojson_polygon_feature,
-    kili_segmentation_to_geojson_polygon,
+    kili_segmentation_to_geojson_geometry,
 )
 
 
@@ -52,7 +52,7 @@ __all__ = [
     "kili_polygon_annotation_to_geojson_polygon_feature",
     "kili_polygon_to_geojson_polygon",
     "kili_segmentation_annotation_to_geojson_polygon_feature",
-    "kili_segmentation_to_geojson_polygon",
+    "kili_segmentation_to_geojson_geometry",
     "kili_json_response_to_feature_collection",
     "geojson_feature_collection_to_kili_json_response",
 ]
