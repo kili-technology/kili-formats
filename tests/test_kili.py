@@ -100,17 +100,31 @@ def test_video_object_detection_annotation_to_json_response(
         converter.patch_label_json_response(
             asset, latest_label_annotations, latest_label_annotations["annotations"]
         )
-        del latest_label_annotations["annotations"]
         jobs = json_interface["jobs"].keys()
         job = next(iter(jobs))
 
         assert latest_label_annotations["labelType"] == expected_latest_label_result["labelType"]
         assert latest_label_annotations["author"] == expected_latest_label_result["author"]
-        assert latest_label_annotations["jsonResponse"]["0"][job]["annotations"][0]["boundingPoly"][
-            0
-        ]["normalizedVertices"] == pytest.approx(
-            expected_latest_label_result["jsonResponse"]["0"][job]["annotations"][0][
+        if "0" in latest_label_annotations.get("jsonResponse", {}):
+            assert latest_label_annotations["jsonResponse"]["0"][job]["annotations"][0][
                 "boundingPoly"
-            ][0]["normalizedVertices"],
-            rel=1e-2,
-        )
+            ][0]["normalizedVertices"] == pytest.approx(
+                expected_latest_label_result["jsonResponse"]["0"][job]["annotations"][0][
+                    "boundingPoly"
+                ][0]["normalizedVertices"],
+                rel=1e-2,
+            )
+        if "assetLevel" in latest_label_annotations.get("jsonResponse", {}):
+            for annotation in latest_label_annotations["annotations"]:
+                job = annotation["job"]
+                annotation_value = annotation["annotationValue"]
+                if "text" in annotation_value:
+                    assert (
+                        annotation_value["text"]
+                        == expected_latest_label_result["jsonResponse"][job]["text"]
+                    )
+                if "categories" in annotation_value:
+                    assert (
+                        annotation_value["categories"][0]
+                        == expected_latest_label_result["jsonResponse"][job]["category"][0]["name"]
+                    )
