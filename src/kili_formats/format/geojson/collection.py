@@ -141,6 +141,10 @@ def kili_json_response_to_feature_collection(json_response: Dict[str, Any]) -> D
 
     jobs_skipped = []
     ann_tools_not_supported = set()
+
+    # To handle multi-part segmentation annotations (same mid)
+    segmentation_groups = {}
+
     for job_name, job_response in json_response.items():
         if "text" in job_response:
             features.append(
@@ -162,16 +166,29 @@ def kili_json_response_to_feature_collection(json_response: Dict[str, Any]) -> D
             jobs_skipped.append(job_name)
             continue
 
-        for ann in job_response["annotations"]:
-            annotation_tool = ann.get("type")
+        for annotation in job_response["annotations"]:
+            annotation_tool = annotation.get("type")
             if annotation_tool not in annotation_tool_to_converter:
                 ann_tools_not_supported.add(annotation_tool)
+                continue
+
+            # Special handling for semantic annotations with same mid
+            if annotation_tool == "semantic" and "mid" in annotation:
+                mid = annotation["mid"]
+                if mid not in segmentation_groups:
+                    segmentation_groups[mid] = {
+                        "job_name": job_name,
+                        "annotations": [],
+                        "categories": annotation.get("categories", []),
+                        "children": annotation.get("children", {}),
+                    }
+                segmentation_groups[mid]["annotations"].append(annotation)
                 continue
 
             converter = annotation_tool_to_converter[annotation_tool]
 
             try:
-                feature = converter(ann, job_name=job_name)
+                feature = converter(annotation, job_name=job_name)
                 features.append(feature)
             except ConversionError as error:
                 warnings.warn(
@@ -179,6 +196,48 @@ def kili_json_response_to_feature_collection(json_response: Dict[str, Any]) -> D
                     stacklevel=2,
                 )
                 continue
+
+    # Process grouped segmentation annotations
+    for mid, group in segmentation_groups.items():
+        if len(group["annotations"]) == 1:
+            # Single annotation, process normally
+            try:
+                feature = kili_segmentation_annotation_to_geojson_polygon_feature(
+                    group["annotations"][0], job_name=group["job_name"]
+                )
+                features.append(feature)
+            except ConversionError as error:
+                warnings.warn(error.args[0], stacklevel=2)
+        else:
+            # Multiple annotations with same mid -> MultiPolygon
+            polygons = []
+            for annotation in group["annotations"]:
+                try:
+                    # Convert each annotation to a polygon
+                    feature = kili_segmentation_annotation_to_geojson_polygon_feature(
+                        annotation, job_name=group["job_name"]
+                    )
+                    # Extract the polygon coordinates
+                    polygons.append(feature["geometry"]["coordinates"])
+                except ConversionError as error:
+                    warnings.warn(error.args[0], stacklevel=2)
+                    continue
+
+            if polygons:
+                multipolygon_feature = {
+                    "type": "Feature",
+                    "geometry": {"type": "MultiPolygon", "coordinates": polygons},
+                    "id": mid,
+                    "properties": {
+                        "kili": {
+                            "categories": group["categories"],
+                            "children": group["children"],
+                            "type": "semantic",
+                            "job": group["job_name"],
+                        }
+                    },
+                }
+                features.append(multipolygon_feature)
 
     if jobs_skipped:
         warnings.warn(f"Jobs {jobs_skipped} cannot be exported to GeoJson format.", stacklevel=2)
@@ -282,13 +341,42 @@ def geojson_feature_collection_to_kili_json_response(
         if annotation_tool not in annotation_tool_to_converter:
             raise ValueError(f"Annotation tool {annotation_tool} is not supported.")
 
-        kili_annotation = annotation_tool_to_converter[annotation_tool](feature)
+        # Special handling for MultiPolygon -> multiple semantic annotations
+        if annotation_tool == "semantic" and feature["geometry"]["type"] == "MultiPolygon":
+            # Create multiple annotations with the same mid
+            mid = feature.get("id")
+            categories = feature["properties"]["kili"].get("categories", [])
+            children = feature["properties"]["kili"].get("children", {})
 
-        if job_name not in json_response:
-            json_response[job_name] = {}
-        if "annotations" not in json_response[job_name]:
-            json_response[job_name]["annotations"] = []
+            for polygon_coords in feature["geometry"]["coordinates"]:
+                # Create a single polygon feature for each part
+                single_polygon_feature = {
+                    "type": "Feature",
+                    "geometry": {"type": "Polygon", "coordinates": polygon_coords},
+                    "id": mid,
+                    "properties": {
+                        "kili": {"categories": categories, "children": children, "type": "semantic"}
+                    },
+                }
 
-        json_response[job_name]["annotations"].append(kili_annotation)
+                kili_annotation = geojson_polygon_feature_to_kili_segmentation_annotation(
+                    single_polygon_feature
+                )
+
+                if job_name not in json_response:
+                    json_response[job_name] = {}
+                if "annotations" not in json_response[job_name]:
+                    json_response[job_name]["annotations"] = []
+
+                json_response[job_name]["annotations"].append(kili_annotation)
+        else:
+            kili_annotation = annotation_tool_to_converter[annotation_tool](feature)
+
+            if job_name not in json_response:
+                json_response[job_name] = {}
+            if "annotations" not in json_response[job_name]:
+                json_response[job_name]["annotations"] = []
+
+            json_response[job_name]["annotations"].append(kili_annotation)
 
     return json_response

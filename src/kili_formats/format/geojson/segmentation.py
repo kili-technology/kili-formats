@@ -4,24 +4,34 @@ from typing import Any, Dict, List, Optional
 
 
 def kili_segmentation_to_geojson_geometry(
-    bounding_poly: List[List[Dict[str, List[Dict[str, Any]]]]]
+    bounding_poly: List[Dict[str, List[Dict[str, Any]]]]
 ) -> Dict[str, Any]:
-    """Convert a Kili segmentation to a geojson polygon or multipolygon geometry.
+    """Convert a Kili segmentation to a geojson polygon geometry.
 
     Args:
-        bounding_poly: A Kili segmentation bounding polygon. List of polygon groups, each containing rings
+        bounding_poly: A Kili segmentation bounding polygon.
 
     Returns:
-        A geojson Polygon or MultiPolygon geometry.
+        A geojson Polygon geometry.
 
     !!! Example
         ```python
-        # Single polygon with holes (hierarchical structure)
+        # Single polygon (no holes)
         >>> bounding_poly = [
-        ...     [  # First (and only) polygon group
-        ...         {'normalizedVertices': [{'x': 0, 'y': 0}, {'x': 1, 'y': 0}, {'x': 1, 'y': 1}]},  # exterior
-        ...         {'normalizedVertices': [{'x': 0.2, 'y': 0.2}, {'x': 0.8, 'y': 0.2}, {'x': 0.8, 'y': 0.8}]}  # hole
-        ...     ]
+        ...     {'normalizedVertices': [{'x': 0, 'y': 0}, {'x': 1, 'y': 0}, {'x': 1, 'y': 1}]}
+        ... ]
+        >>> kili_segmentation_to_geojson_geometry(bounding_poly)
+        {
+            'type': 'Polygon',
+            'coordinates': [
+                [[0, 0], [1, 0], [1, 1], [0, 0]]  # exterior ring (closed)
+            ]
+        }
+
+        # Polygon with holes
+        >>> bounding_poly = [
+        ...     {'normalizedVertices': [{'x': 0, 'y': 0}, {'x': 1, 'y': 0}, {'x': 1, 'y': 1}]},  # exterior
+        ...     {'normalizedVertices': [{'x': 0.2, 'y': 0.2}, {'x': 0.8, 'y': 0.2}, {'x': 0.8, 'y': 0.8}]}  # hole
         ... ]
         >>> kili_segmentation_to_geojson_geometry(bounding_poly)
         {
@@ -31,52 +41,18 @@ def kili_segmentation_to_geojson_geometry(
                 [[0.2, 0.2], [0.8, 0.2], [0.8, 0.8], [0.2, 0.2]]  # hole (closed)
             ]
         }
-
-        # MultiPolygon (hierarchical structure)
-        >>> bounding_poly = [
-        ...     [  # First polygon group
-        ...         {'normalizedVertices': [{'x': 0, 'y': 0}, {'x': 1, 'y': 0}, {'x': 1, 'y': 1}]}
-        ...     ],
-        ...     [  # Second polygon group
-        ...         {'normalizedVertices': [{'x': 2, 'y': 2}, {'x': 3, 'y': 2}, {'x': 3, 'y': 3}]}
-        ...     ]
-        ... ]
-        >>> kili_segmentation_to_geojson_geometry(bounding_poly)
-        {
-            'type': 'MultiPolygon',
-            'coordinates': [
-                [[[0, 0], [1, 0], [1, 1], [0, 0]]],  # First polygon
-                [[[2, 2], [3, 2], [3, 3], [2, 2]]]   # Second polygon
-            ]
-        }
         ```
     """
-    # Determine Polygon vs MultiPolygon based on number of groups
-    if len(bounding_poly) == 1:
-        # Single polygon (potentially with holes)
-        ret = {"type": "Polygon", "coordinates": []}
-        for ring_dict in bounding_poly[0]:
-            ring_coords = [[vertex["x"], vertex["y"]] for vertex in ring_dict["normalizedVertices"]]
-            # Ensure the first and last points are identical (closed ring)
-            if ring_coords[0] != ring_coords[-1]:
-                ring_coords.append(ring_coords[0])
-            ret["coordinates"].append(ring_coords)
-        return ret
-    else:
-        # MultiPolygon
-        ret = {"type": "MultiPolygon", "coordinates": []}
-        for polygon_group in bounding_poly:
-            polygon_coords = []
-            for ring_dict in polygon_group:
-                ring_coords = [
-                    [vertex["x"], vertex["y"]] for vertex in ring_dict["normalizedVertices"]
-                ]
-                # Ensure the first and last points are identical (closed ring)
-                if ring_coords[0] != ring_coords[-1]:
-                    ring_coords.append(ring_coords[0])
-                polygon_coords.append(ring_coords)
-            ret["coordinates"].append(polygon_coords)
-        return ret
+    ret = {"type": "Polygon", "coordinates": []}
+
+    for ring_dict in bounding_poly:
+        ring_coords = [[vertex["x"], vertex["y"]] for vertex in ring_dict["normalizedVertices"]]
+        # Ensure the first and last points are identical (closed ring)
+        if ring_coords and ring_coords[0] != ring_coords[-1]:
+            ring_coords.append(ring_coords[0])
+        ret["coordinates"].append(ring_coords)
+
+    return ret
 
 
 def kili_segmentation_annotation_to_geojson_polygon_feature(
@@ -89,7 +65,7 @@ def kili_segmentation_annotation_to_geojson_polygon_feature(
         job_name: The name of the job to which the annotation belongs.
 
     Returns:
-        A geojson polygon feature (can be Polygon or MultiPolygon).
+        A geojson polygon feature.
 
     !!! Example
         ```python
@@ -97,10 +73,8 @@ def kili_segmentation_annotation_to_geojson_polygon_feature(
         >>> segmentation = {
         ...     'children': {},
         ...     'boundingPoly': [
-        ...         [  # Single polygon group
-        ...             {'normalizedVertices': [{'x': 0, 'y': 0}, {'x': 1, 'y': 0}, {'x': 1, 'y': 1}]},
-        ...             {'normalizedVertices': [{'x': 0.2, 'y': 0.2}, {'x': 0.8, 'y': 0.2}, {'x': 0.8, 'y': 0.8}]}
-        ...         ]
+        ...         {'normalizedVertices': [{'x': 0, 'y': 0}, {'x': 1, 'y': 0}, {'x': 1, 'y': 1}]},
+        ...         {'normalizedVertices': [{'x': 0.2, 'y': 0.2}, {'x': 0.8, 'y': 0.2}, {'x': 0.8, 'y': 0.8}]}
         ...     ],
         ...     'categories': [{'name': 'building'}],
         ...     'mid': 'building_001',
@@ -120,38 +94,6 @@ def kili_segmentation_annotation_to_geojson_polygon_feature(
             'properties': {
                 'kili': {
                     'categories': [{'name': 'building'}],
-                    'children': {},
-                    'type': 'semantic',
-                    'job': 'detection_job'
-                }
-            }
-        }
-
-        # MultiPolygon annotation
-        >>> segmentation = {
-        ...     'children': {},
-        ...     'boundingPoly': [
-        ...         [{'normalizedVertices': [{'x': 0, 'y': 0}, {'x': 1, 'y': 0}, {'x': 1, 'y': 1}]}],  # First polygon
-        ...         [{'normalizedVertices': [{'x': 2, 'y': 2}, {'x': 3, 'y': 2}, {'x': 3, 'y': 3}]}]   # Second polygon
-        ...     ],
-        ...     'categories': [{'name': 'forest'}],
-        ...     'mid': 'forest_001',
-        ...     'type': 'semantic'
-        ... }
-        >>> kili_segmentation_annotation_to_geojson_polygon_feature(segmentation, 'detection_job')
-        {
-            'type': 'Feature',
-            'geometry': {
-                'type': 'MultiPolygon',
-                'coordinates': [
-                    [[[0, 0], [1, 0], [1, 1], [0, 0]]],
-                    [[[2, 2], [3, 2], [3, 3], [2, 2]]]
-                ]
-            },
-            'id': 'forest_001',
-            'properties': {
-                'kili': {
-                    'categories': [{'name': 'forest'}],
                     'children': {},
                     'type': 'semantic',
                     'job': 'detection_job'
@@ -194,7 +136,7 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
 ) -> Dict[str, Any]:
     """Convert a geojson polygon feature to a Kili segmentation annotation.
 
-    Supports both Polygon and MultiPolygon geometries.
+    Supports only Polygon geometries. MultiPolygon should be handled at a higher level.
 
     Args:
         polygon: A geojson polygon feature.
@@ -206,7 +148,7 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
             If not provided, the mid is taken from the `id` key of the geojson feature.
 
     Returns:
-        A Kili segmentation annotation with hierarchical boundingPoly structure.
+        A Kili segmentation annotation.
 
     !!! Example
         ```python
@@ -234,44 +176,11 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
         {
             'children': {},
             'boundingPoly': [
-                [  # Single polygon group
-                    {'normalizedVertices': [{'x': 0, 'y': 0}, {'x': 1, 'y': 0}, {'x': 1, 'y': 1}]},
-                    {'normalizedVertices': [{'x': 0.2, 'y': 0.2}, {'x': 0.8, 'y': 0.2}, {'x': 0.8, 'y': 0.8}]}
-                ]
+                {'normalizedVertices': [{'x': 0, 'y': 0}, {'x': 1, 'y': 0}, {'x': 1, 'y': 1}]},
+                {'normalizedVertices': [{'x': 0.2, 'y': 0.2}, {'x': 0.8, 'y': 0.2}, {'x': 0.8, 'y': 0.8}]}
             ],
             'categories': [{'name': 'building'}],
             'mid': 'building_001',
-            'type': 'semantic'
-        }
-
-        # MultiPolygon feature
-        >>> multipolygon = {
-        ...     'type': 'Feature',
-        ...     'geometry': {
-        ...         'type': 'MultiPolygon',
-        ...         'coordinates': [
-        ...             [[[0, 0], [1, 0], [1, 1], [0, 0]]],  # First polygon
-        ...             [[[2, 2], [3, 2], [3, 3], [2, 2]]]   # Second polygon
-        ...         ]
-        ...     },
-        ...     'id': 'forest_001',
-        ...     'properties': {
-        ...         'kili': {
-        ...             'categories': [{'name': 'forest'}],
-        ...             'children': {},
-        ...             'type': 'semantic'
-        ...         }
-        ...     }
-        ... }
-        >>> geojson_polygon_feature_to_kili_segmentation_annotation(multipolygon)
-        {
-            'children': {},
-            'boundingPoly': [
-                [{'normalizedVertices': [{'x': 0, 'y': 0}, {'x': 1, 'y': 0}, {'x': 1, 'y': 1}]}],
-                [{'normalizedVertices': [{'x': 2, 'y': 2}, {'x': 3, 'y': 2}, {'x': 3, 'y': 3}]}]
-            ],
-            'categories': [{'name': 'forest'}],
-            'mid': 'forest_001',
             'type': 'semantic'
         }
         ```
@@ -281,10 +190,7 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
     ), f"Feature type must be `Feature`, got: {polygon['type']}"
 
     geometry_type = polygon["geometry"]["type"]
-    assert geometry_type in [
-        "Polygon",
-        "MultiPolygon",
-    ], f"Geometry type must be `Polygon` or `MultiPolygon`, got: {geometry_type}"
+    assert geometry_type == "Polygon", f"Geometry type must be `Polygon`, got: {geometry_type}"
 
     children = children or polygon["properties"].get("kili", {}).get("children", {})
     categories = categories or polygon["properties"]["kili"]["categories"]
@@ -297,23 +203,16 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
 
     coords = polygon["geometry"]["coordinates"]
 
-    if geometry_type == "Polygon":
-        # Single polygon: wrap rings in a single group
-        ret["boundingPoly"] = [
-            [
-                {"normalizedVertices": [{"x": coord[0], "y": coord[1]} for coord in ring[:-1]]}
-                for ring in coords
-            ]
-        ]
-    else:
-        # MultiPolygon: each polygon becomes a separate group
-        ret["boundingPoly"] = [
-            [
-                {"normalizedVertices": [{"x": coord[0], "y": coord[1]} for coord in ring[:-1]]}
-                for ring in polygon_coords
-            ]
-            for polygon_coords in coords
-        ]
+    # Convert each ring (exterior + holes) to Kili format
+    ret["boundingPoly"] = []
+    for ring in coords:
+        # Remove the last point if it's the same as the first (closed ring)
+        if ring and ring[0] == ring[-1]:
+            ring = ring[:-1]
+
+        ret["boundingPoly"].append(
+            {"normalizedVertices": [{"x": coord[0], "y": coord[1]} for coord in ring]}
+        )
 
     if mid is not None:
         ret["mid"] = str(mid)
