@@ -90,7 +90,6 @@ video_asset = {
     "pageResolutions": None,
     "resolution": {"height": 1080, "width": 1920},
 }
-
 video_project: ProjectDict = {
     "jsonInterface": {
         "jobs": {
@@ -114,7 +113,6 @@ video_project: ProjectDict = {
     "id": "fake_proj_id",
     "organizationId": "fake_org_id",
 }
-
 video_project_asset_unnormalized = {
     "content": (
         "https://storage.googleapis.com/label-public-staging/demo-projects/video/tuto_video.mp4"
@@ -267,6 +265,7 @@ video_project_asset_unnormalized = {
     "pageResolutions": None,
     "resolution": {"height": 1080, "width": 1920},
 }
+
 latest_label_annotations_rectangle_rotated = {
     "annotations": [
         {
@@ -399,7 +398,6 @@ latest_label_annotations_rectangle = {
     "labelType": "DEFAULT",
     "modelName": None,
 }
-
 latest_label_annotations_polygon = {
     "annotations": [
         {
@@ -451,7 +449,6 @@ latest_label_annotations_polygon = {
     "labelType": "REVIEW",
     "modelName": None,
 }
-
 latest_label_annotations_semantic = {
     "annotations": [
         {
@@ -526,7 +523,6 @@ latest_label_annotations_semantic = {
     "labelType": "REVIEW",
     "modelName": None,
 }
-
 latest_label_annotations_semantic_with_hole = {
     "annotations": [
         {
@@ -757,6 +753,41 @@ latest_label_annotations_semantic_multipart = {
     "labelType": "REVIEW",
     "modelName": None,
 }
+latest_label_annotations_asset_level = {
+    "annotations": [
+        {
+            "__typename": "ClassificationAnnotation",
+            "id": "20250630101255345-3",
+            "job": "classification_at_asset_level",
+            "path": [],
+            "labelId": "cmcixnyx302ts9g9k95z2c6st",
+            "annotationValue": {"categories": ["OUI"]},
+            "chatItemId": None,
+        },
+        {
+            "__typename": "TranscriptionAnnotation",
+            "id": "20250630120051158-1",
+            "job": "transcription_at_asset_level",
+            "path": [],
+            "labelId": "cmcixnyx302ts9g9k95z2c6st",
+            "annotationValue": {"text": "this is a transcription at asset level"},
+            "chatItemId": None,
+        },
+    ],
+    "author": {
+        "email": "test+admin@kili-technology.com",
+        "firstname": "Test",
+        "id": "user-1",
+        "lastname": "Admin",
+    },
+    "createdAt": "2025-06-02T13:24:37.078Z",
+    "isLatestLabelForUser": True,
+    "isSentBackToQueue": False,
+    "jsonResponse": {"0": {"ANNOTATION_JOB_COUNTER": {}, "ANNOTATION_NAMES_JOB": {}}},
+    "labelType": "REVIEW",
+    "modelName": None,
+}
+
 expected_latest_label_result_rectangle = {
     "author": {
         "email": "test+admin@kili-technology.com",
@@ -1575,7 +1606,52 @@ expected_latest_label_result_polygon = {
     "labelType": "REVIEW",
     "modelName": None,
 }
+expected_latest_label_result_asset_level = {
+    "author": {
+        "email": "test+admin@kili-technology.com",
+        "firstname": "Test",
+        "id": "user-1",
+        "lastname": "Admin",
+    },
+    "jsonResponse": {
+        "transcription_at_asset_level": {"text": "this is a transcription at asset level"},
+        "classification_at_asset_level": {"category": [{"name": "OUI"}]},
+    },
+    "createdAt": "2025-06-02T11:42:14.135Z",
+    "isLatestLabelForUser": True,
+    "isSentBackToQueue": False,
+    "labelType": "REVIEW",
+    "modelName": None,
+}
 
+json_interface_asset_level = {
+    "jobs": {
+        "transcription_at_asset_level": {
+            "content": {"input": "textField"},
+            "instruction": "Transcription at Asset Level",
+            "mlTask": "TRANSCRIPTION",
+            "required": 0,
+            "isChild": False,
+            "level": "asset",
+            "isNew": False,
+        },
+        "classification_at_asset_level": {
+            "content": {
+                "categories": {
+                    "OUI": {"children": [], "name": "Oui", "id": "category1"},
+                    "NON": {"children": [], "name": "Non", "id": "category2"},
+                },
+                "input": "radio",
+            },
+            "instruction": "Classification at Asset Level",
+            "mlTask": "CLASSIFICATION",
+            "required": 1,
+            "isChild": False,
+            "level": "asset",
+            "isNew": False,
+        },
+    }
+}
 json_interface_rectangle = {
     "jobs": {
         "JOB_0": {
@@ -1639,6 +1715,11 @@ json_interface_semantic = {
 }
 
 test_cases = [
+    (
+        json_interface_asset_level,
+        latest_label_annotations_asset_level,
+        expected_latest_label_result_asset_level,
+    ),
     (
         json_interface_rectangle,
         latest_label_annotations_rectangle,

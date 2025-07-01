@@ -160,6 +160,12 @@ def _video_annotations_to_json_response(
             ann_json_resp = _transcription_annotation_to_json_response(ann)
             json_resp[ASSET_LEVEL_KEY] = {**json_resp[ASSET_LEVEL_KEY], **ann_json_resp}
 
+        elif ann["__typename"] == "ClassificationAnnotation":
+            ann = cast(ClassificationAnnotation, ann)
+            other_annotations = cast(List[ClassicAnnotation], other_annotations)
+            ann_json_resp = _classification_annotation_to_json_response(ann, other_annotations)
+            json_resp[ASSET_LEVEL_KEY] = {**json_resp[ASSET_LEVEL_KEY], **ann_json_resp}
+
         elif ann["__typename"] == "VideoObjectDetectionAnnotation":
             ann = cast(VideoObjectDetectionAnnotation, ann)
             ann_json_resp = _video_object_detection_annotation_to_json_response(
@@ -310,6 +316,10 @@ def _key_annotations_iterator(annotation: VideoAnnotation) -> Generator:
 
     The key annotations are sorted by frame id.
     """
+    if "keyAnnotations" not in annotation:
+        raise AttributeError(
+            f"Annotation of type {annotation.get('__typename', type(annotation))} does not have 'keyAnnotations'"
+        )
     sorted_key_annotations = sorted(
         annotation["keyAnnotations"], key=lambda key_ann: int(key_ann["frame"])
     )
