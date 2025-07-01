@@ -401,16 +401,14 @@ class TestGeojsonPolygonToKili:
 class TestKiliSegmentationToGeojson:
     def test_kili_segmentation_to_geojson_geometry_single_polygon(self):
         bounding_poly = [
-            [
-                {"normalizedVertices": [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}]},
-                {
-                    "normalizedVertices": [
-                        {"x": 0.2, "y": 0.2},
-                        {"x": 0.8, "y": 0.2},
-                        {"x": 0.8, "y": 0.8},
-                    ]
-                },
-            ]
+            {"normalizedVertices": [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}]},
+            {
+                "normalizedVertices": [
+                    {"x": 0.2, "y": 0.2},
+                    {"x": 0.8, "y": 0.2},
+                    {"x": 0.8, "y": 0.8},
+                ]
+            },
         ]
         result = kili_segmentation_to_geojson_geometry(bounding_poly)
         expected = {
@@ -422,32 +420,18 @@ class TestKiliSegmentationToGeojson:
         }
         assert result == expected
 
-    def test_kili_segmentation_to_geojson_geometry_multipolygon(self):
-        bounding_poly = [
-            [{"normalizedVertices": [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}]}],
-            [{"normalizedVertices": [{"x": 2, "y": 2}, {"x": 3, "y": 2}, {"x": 3, "y": 3}]}],
-        ]
-        result = kili_segmentation_to_geojson_geometry(bounding_poly)
-        expected = {
-            "type": "MultiPolygon",
-            "coordinates": [[[[0, 0], [1, 0], [1, 1], [0, 0]]], [[[2, 2], [3, 2], [3, 3], [2, 2]]]],
-        }
-        assert result == expected
-
     def test_kili_segmentation_annotation_to_geojson_polygon_feature_single_polygon(self):
         segmentation_annotation = {
             "children": {},
             "boundingPoly": [
-                [
-                    {"normalizedVertices": [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}]},
-                    {
-                        "normalizedVertices": [
-                            {"x": 0.2, "y": 0.2},
-                            {"x": 0.8, "y": 0.2},
-                            {"x": 0.8, "y": 0.8},
-                        ]
-                    },
-                ]
+                {"normalizedVertices": [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}]},
+                {
+                    "normalizedVertices": [
+                        {"x": 0.2, "y": 0.2},
+                        {"x": 0.8, "y": 0.2},
+                        {"x": 0.8, "y": 0.8},
+                    ]
+                },
             ],
             "categories": [{"name": "building"}],
             "mid": "building_001",
@@ -462,26 +446,6 @@ class TestKiliSegmentationToGeojson:
         assert result["id"] == "building_001"
         assert result["properties"]["kili"]["job"] == "detection_job"
         assert len(result["geometry"]["coordinates"]) == 2  # One exterior ring, one hole
-
-    def test_kili_segmentation_annotation_to_geojson_polygon_feature_multipolygon(self):
-        segmentation_annotation = {
-            "children": {},
-            "boundingPoly": [
-                [{"normalizedVertices": [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}]}],
-                [{"normalizedVertices": [{"x": 2, "y": 2}, {"x": 3, "y": 2}, {"x": 3, "y": 3}]}],
-            ],
-            "categories": [{"name": "forest"}],
-            "mid": "forest_001",
-            "type": "semantic",
-        }
-        result = kili_segmentation_annotation_to_geojson_polygon_feature(
-            segmentation_annotation, "detection_job"
-        )
-
-        assert result["type"] == "Feature"
-        assert result["geometry"]["type"] == "MultiPolygon"
-        assert result["id"] == "forest_001"
-        assert len(result["geometry"]["coordinates"]) == 2  # Two separate polygons
 
     def test_kili_segmentation_annotation_wrong_type_raises_error(self):
         segmentation_annotation = {"boundingPoly": [], "type": "polygon"}
@@ -514,16 +478,14 @@ class TestGeojsonSegmentationToKili:
         expected = {
             "children": {},
             "boundingPoly": [
-                [
-                    {"normalizedVertices": [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}]},
-                    {
-                        "normalizedVertices": [
-                            {"x": 0.2, "y": 0.2},
-                            {"x": 0.8, "y": 0.2},
-                            {"x": 0.8, "y": 0.8},
-                        ]
-                    },
-                ]
+                {"normalizedVertices": [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}]},
+                {
+                    "normalizedVertices": [
+                        {"x": 0.2, "y": 0.2},
+                        {"x": 0.8, "y": 0.2},
+                        {"x": 0.8, "y": 0.8},
+                    ]
+                },
             ],
             "categories": [{"name": "building"}],
             "mid": "building_001",
@@ -531,39 +493,9 @@ class TestGeojsonSegmentationToKili:
         }
         assert result == expected
 
-    def test_geojson_polygon_feature_to_kili_segmentation_annotation_multipolygon(self):
-        multipolygon = {
-            "type": "Feature",
-            "geometry": {
-                "type": "MultiPolygon",
-                "coordinates": [
-                    [[[0, 0], [1, 0], [1, 1], [0, 0]]],
-                    [[[2, 2], [3, 2], [3, 3], [2, 2]]],
-                ],
-            },
-            "id": "forest_001",
-            "properties": {
-                "kili": {"categories": [{"name": "forest"}], "children": {}, "type": "semantic"}
-            },
-        }
-        result = geojson_polygon_feature_to_kili_segmentation_annotation(multipolygon)
-        expected = {
-            "children": {},
-            "boundingPoly": [
-                [{"normalizedVertices": [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}]}],
-                [{"normalizedVertices": [{"x": 2, "y": 2}, {"x": 3, "y": 2}, {"x": 3, "y": 3}]}],
-            ],
-            "categories": [{"name": "forest"}],
-            "mid": "forest_001",
-            "type": "semantic",
-        }
-        assert result == expected
-
     def test_geojson_unsupported_geometry_type_raises_error(self):
         feature = {"type": "Feature", "geometry": {"type": "Point", "coordinates": [0, 0]}}
-        with pytest.raises(
-            AssertionError, match="Geometry type must be `Polygon` or `MultiPolygon`"
-        ):
+        with pytest.raises(AssertionError, match="Geometry type must be `Polygon`"):
             geojson_polygon_feature_to_kili_segmentation_annotation(feature)
 
 
@@ -694,34 +626,38 @@ class TestFeatureCollections:
         assert result["features"][0]["geometry"]["type"] == "Polygon"
 
     def test_kili_json_response_to_feature_collection_semantic_annotations(self):
+        # Test with multiple annotations having the same mid -> should create MultiPolygon
         json_response = {
             "SEMANTIC_JOB": {
                 "annotations": [
                     {
                         "categories": [{"name": "forest"}],
                         "boundingPoly": [
-                            [
-                                {
-                                    "normalizedVertices": [
-                                        {"x": 0, "y": 0},
-                                        {"x": 1, "y": 0},
-                                        {"x": 1, "y": 1},
-                                    ]
-                                }
-                            ],
-                            [
-                                {
-                                    "normalizedVertices": [
-                                        {"x": 2, "y": 2},
-                                        {"x": 3, "y": 2},
-                                        {"x": 3, "y": 3},
-                                    ]
-                                }
-                            ],
+                            {
+                                "normalizedVertices": [
+                                    {"x": 0, "y": 0},
+                                    {"x": 1, "y": 0},
+                                    {"x": 1, "y": 1},
+                                ]
+                            }
                         ],
                         "mid": "semantic_1",
                         "type": "semantic",
-                    }
+                    },
+                    {
+                        "categories": [{"name": "forest"}],
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {"x": 2, "y": 2},
+                                    {"x": 3, "y": 2},
+                                    {"x": 3, "y": 3},
+                                ]
+                            }
+                        ],
+                        "mid": "semantic_1",  # Same mid
+                        "type": "semantic",
+                    },
                 ]
             }
         }
@@ -1019,43 +955,47 @@ class TestComplexScenarios:
         assert kili_result == original_kili_response
 
     def test_semantic_segmentation_multipolygon_workflow(self):
-        # Test complex semantic segmentation with multipolygon
+        # Test complex semantic segmentation with multiple annotations having same mid
         original_kili_response = {
             "SEMANTIC_JOB": {
                 "annotations": [
                     {
                         "categories": [{"name": "forest"}],
                         "boundingPoly": [
-                            [  # First polygon group
-                                {
-                                    "normalizedVertices": [
-                                        {"x": 0.1, "y": 0.1},
-                                        {"x": 0.3, "y": 0.1},
-                                        {"x": 0.3, "y": 0.3},
-                                    ]
-                                },
-                                {
-                                    "normalizedVertices": [
-                                        {"x": 0.15, "y": 0.15},
-                                        {"x": 0.25, "y": 0.15},
-                                        {"x": 0.25, "y": 0.25},
-                                    ]
-                                },  # hole
-                            ],
-                            [  # Second polygon group
-                                {
-                                    "normalizedVertices": [
-                                        {"x": 0.5, "y": 0.5},
-                                        {"x": 0.7, "y": 0.5},
-                                        {"x": 0.7, "y": 0.7},
-                                    ]
-                                }
-                            ],
+                            {
+                                "normalizedVertices": [
+                                    {"x": 0.1, "y": 0.1},
+                                    {"x": 0.3, "y": 0.1},
+                                    {"x": 0.3, "y": 0.3},
+                                ]
+                            },
+                            {
+                                "normalizedVertices": [
+                                    {"x": 0.15, "y": 0.15},
+                                    {"x": 0.25, "y": 0.15},
+                                    {"x": 0.25, "y": 0.25},
+                                ]
+                            },  # hole
                         ],
                         "mid": "forest_complex",
                         "type": "semantic",
                         "children": {},
-                    }
+                    },
+                    {
+                        "categories": [{"name": "forest"}],
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {"x": 0.5, "y": 0.5},
+                                    {"x": 0.7, "y": 0.5},
+                                    {"x": 0.7, "y": 0.7},
+                                ]
+                            }
+                        ],
+                        "mid": "forest_complex",  # Same mid
+                        "type": "semantic",
+                        "children": {},
+                    },
                 ]
             }
         }
@@ -1063,7 +1003,6 @@ class TestComplexScenarios:
         # Convert to GeoJSON
         geojson_result = kili_json_response_to_feature_collection(original_kili_response)
 
-        # Verify it's a MultiPolygon
         assert geojson_result["features"][0]["geometry"]["type"] == "MultiPolygon"
         assert (
             len(geojson_result["features"][0]["geometry"]["coordinates"]) == 2
