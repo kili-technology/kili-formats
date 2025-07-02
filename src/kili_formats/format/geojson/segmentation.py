@@ -67,7 +67,6 @@ def kili_segmentation_to_geojson_geometry(bounding_poly: List[Any]) -> Dict[str,
     if not bounding_poly:
         raise ValueError("Empty bounding_poly")
 
-    # Detect format: hierarchical vs flat
     is_hierarchical = _is_hierarchical_format(bounding_poly)
 
     if is_hierarchical:
@@ -123,15 +122,12 @@ def _is_hierarchical_format(bounding_poly):
 
     first_element = bounding_poly[0]
 
-    # If first element is a list, it's hierarchical
     if isinstance(first_element, list):
         return True
 
-    # If first element is a dict with 'normalizedVertices', it's flat
     if isinstance(first_element, dict) and "normalizedVertices" in first_element:
         return False
 
-    # Default to flat format
     return False
 
 
@@ -385,7 +381,6 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
     children = children or polygon["properties"].get("kili", {}).get("children", {})
     categories = categories or polygon["properties"]["kili"]["categories"]
 
-    # Determine mid
     annotation_mid = None
     if mid is not None:
         annotation_mid = str(mid)
