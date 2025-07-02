@@ -1,6 +1,7 @@
 """Geojson collection module."""
 
 import warnings
+from collections import defaultdict
 from typing import Any, Dict, Sequence
 
 from .bbox import (
@@ -90,6 +91,77 @@ def features_to_feature_collection(
     return {"type": "FeatureCollection", "features": list(features)}
 
 
+def _group_semantic_annotations_by_mid(annotations):
+    """Group semantic annotations by their mid (for multi-part polygons)."""
+    grouped = defaultdict(list)
+    for annotation in annotations:
+        if annotation.get("type") == "semantic" and "mid" in annotation:
+            grouped[annotation["mid"]].append(annotation)
+        else:
+            # For annotations without mid or non-semantic, treat as individual
+            grouped[id(annotation)] = [annotation]  # Use object id as unique key
+    return grouped
+
+
+def _convert_flat_to_hierarchical_format(annotations_group):
+    """Convert flat format annotations to hierarchical format.
+
+    Args:
+        annotations_group: List of semantic annotations with the same mid
+
+    Returns:
+        Single annotation with hierarchical boundingPoly structure
+    """
+    if len(annotations_group) == 1:
+        # Single annotation - check if it's already hierarchical
+        annotation = annotations_group[0]
+        if _is_hierarchical_format(annotation["boundingPoly"]):
+            return annotation
+        else:
+            # Convert flat to hierarchical
+            new_ann = annotation.copy()
+            new_ann["boundingPoly"] = [annotation["boundingPoly"]]
+            return new_ann
+    else:
+        # Multiple annotations with same mid - merge them
+        base_ann = annotations_group[0].copy()
+        all_bounding_poly = []
+
+        for annotation in annotations_group:
+            if _is_hierarchical_format(annotation["boundingPoly"]):
+                # Already hierarchical - add each polygon group
+                all_bounding_poly.extend(annotation["boundingPoly"])
+            else:
+                # Flat format - add as single polygon group
+                all_bounding_poly.append(annotation["boundingPoly"])
+
+        base_ann["boundingPoly"] = all_bounding_poly
+        return base_ann
+
+
+def _is_hierarchical_format(bounding_poly):
+    """Check if boundingPoly is in hierarchical format.
+
+    Hierarchical: [ [ {normalizedVertices: [...]}, ... ], ... ]
+    Flat: [ {normalizedVertices: [...]}, ... ]
+    """
+    if not bounding_poly or len(bounding_poly) == 0:
+        return False
+
+    first_element = bounding_poly[0]
+
+    # If first element is a list, it's hierarchical
+    if isinstance(first_element, list):
+        return True
+
+    # If first element is a dict with 'normalizedVertices', it's flat
+    if isinstance(first_element, dict) and "normalizedVertices" in first_element:
+        return False
+
+    # Default to flat format
+    return False
+
+
 def kili_json_response_to_feature_collection(json_response: Dict[str, Any]) -> Dict[str, Any]:
     """Convert a Kili label json response to a Geojson feature collection.
 
@@ -162,8 +234,18 @@ def kili_json_response_to_feature_collection(json_response: Dict[str, Any]) -> D
             jobs_skipped.append(job_name)
             continue
 
-        for ann in job_response["annotations"]:
-            annotation_tool = ann.get("type")
+        # Group semantic annotations by mid before processing
+        annotations = job_response["annotations"]
+        semantic_annotations = [
+            annotation for annotation in annotations if annotation.get("type") == "semantic"
+        ]
+        non_semantic_annotations = [
+            annotation for annotation in annotations if annotation.get("type") != "semantic"
+        ]
+
+        # Process non-semantic annotations normally
+        for annotation in non_semantic_annotations:
+            annotation_tool = annotation.get("type")
             if annotation_tool not in annotation_tool_to_converter:
                 ann_tools_not_supported.add(annotation_tool)
                 continue
@@ -171,7 +253,7 @@ def kili_json_response_to_feature_collection(json_response: Dict[str, Any]) -> D
             converter = annotation_tool_to_converter[annotation_tool]
 
             try:
-                feature = converter(ann, job_name=job_name)
+                feature = converter(annotation, job_name=job_name)
                 features.append(feature)
             except ConversionError as error:
                 warnings.warn(
@@ -179,6 +261,33 @@ def kili_json_response_to_feature_collection(json_response: Dict[str, Any]) -> D
                     stacklevel=2,
                 )
                 continue
+
+        # Process semantic annotations with grouping
+        if semantic_annotations:
+            grouped_semantic = _group_semantic_annotations_by_mid(semantic_annotations)
+
+            for mid_or_id, annotations_group in grouped_semantic.items():
+                try:
+                    # Convert to hierarchical format if needed
+                    merged_annotation = _convert_flat_to_hierarchical_format(annotations_group)
+
+                    # Convert to GeoJSON
+                    feature = kili_segmentation_annotation_to_geojson_polygon_feature(
+                        merged_annotation, job_name=job_name
+                    )
+                    features.append(feature)
+                except ConversionError as error:
+                    warnings.warn(
+                        error.args[0],
+                        stacklevel=2,
+                    )
+                    continue
+                except Exception as error:
+                    warnings.warn(
+                        f"Error converting semantic annotation: {error}",
+                        stacklevel=2,
+                    )
+                    continue
 
     if jobs_skipped:
         warnings.warn(f"Jobs {jobs_skipped} cannot be exported to GeoJson format.", stacklevel=2)
@@ -289,6 +398,9 @@ def geojson_feature_collection_to_kili_json_response(
         if "annotations" not in json_response[job_name]:
             json_response[job_name]["annotations"] = []
 
-        json_response[job_name]["annotations"].append(kili_annotation)
+        if isinstance(kili_annotation, list):
+            json_response[job_name]["annotations"].extend(kili_annotation)
+        else:
+            json_response[job_name]["annotations"].append(kili_annotation)
 
     return json_response
