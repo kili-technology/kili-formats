@@ -511,10 +511,9 @@ class TestGeojsonSegmentationToKili:
             },
         }
         result = geojson_polygon_feature_to_kili_segmentation_annotation(polygon)
-        expected = {
-            "children": {},
-            "boundingPoly": [
-                [
+        expected = [
+            {
+                "boundingPoly": [
                     {"normalizedVertices": [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}]},
                     {
                         "normalizedVertices": [
@@ -523,12 +522,13 @@ class TestGeojsonSegmentationToKili:
                             {"x": 0.8, "y": 0.8},
                         ]
                     },
-                ]
-            ],
-            "categories": [{"name": "building"}],
-            "mid": "building_001",
-            "type": "semantic",
-        }
+                ],
+                "categories": [{"name": "building"}],
+                "children": {},
+                "mid": "building_001",
+                "type": "semantic",
+            }
+        ]
         assert result == expected
 
     def test_geojson_polygon_feature_to_kili_segmentation_annotation_multipolygon(self):
@@ -547,16 +547,26 @@ class TestGeojsonSegmentationToKili:
             },
         }
         result = geojson_polygon_feature_to_kili_segmentation_annotation(multipolygon)
-        expected = {
-            "children": {},
-            "boundingPoly": [
-                [{"normalizedVertices": [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}]}],
-                [{"normalizedVertices": [{"x": 2, "y": 2}, {"x": 3, "y": 2}, {"x": 3, "y": 3}]}],
-            ],
-            "categories": [{"name": "forest"}],
-            "mid": "forest_001",
-            "type": "semantic",
-        }
+        expected = [
+            {
+                "boundingPoly": [
+                    {"normalizedVertices": [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}]}
+                ],
+                "categories": [{"name": "forest"}],
+                "children": {},
+                "mid": "forest_001",
+                "type": "semantic",
+            },
+            {
+                "boundingPoly": [
+                    {"normalizedVertices": [{"x": 2, "y": 2}, {"x": 3, "y": 2}, {"x": 3, "y": 3}]}
+                ],
+                "categories": [{"name": "forest"}],
+                "children": {},
+                "mid": "forest_001",
+                "type": "semantic",
+            },
+        ]
         assert result == expected
 
     def test_geojson_unsupported_geometry_type_raises_error(self):
@@ -1024,38 +1034,42 @@ class TestComplexScenarios:
             "SEMANTIC_JOB": {
                 "annotations": [
                     {
-                        "categories": [{"name": "forest"}],
                         "boundingPoly": [
-                            [  # First polygon group
-                                {
-                                    "normalizedVertices": [
-                                        {"x": 0.1, "y": 0.1},
-                                        {"x": 0.3, "y": 0.1},
-                                        {"x": 0.3, "y": 0.3},
-                                    ]
-                                },
-                                {
-                                    "normalizedVertices": [
-                                        {"x": 0.15, "y": 0.15},
-                                        {"x": 0.25, "y": 0.15},
-                                        {"x": 0.25, "y": 0.25},
-                                    ]
-                                },  # hole
-                            ],
-                            [  # Second polygon group
-                                {
-                                    "normalizedVertices": [
-                                        {"x": 0.5, "y": 0.5},
-                                        {"x": 0.7, "y": 0.5},
-                                        {"x": 0.7, "y": 0.7},
-                                    ]
-                                }
-                            ],
+                            {
+                                "normalizedVertices": [
+                                    {"x": 0.1, "y": 0.1},
+                                    {"x": 0.3, "y": 0.1},
+                                    {"x": 0.3, "y": 0.3},
+                                ]
+                            },
+                            {
+                                "normalizedVertices": [
+                                    {"x": 0.15, "y": 0.15},
+                                    {"x": 0.25, "y": 0.15},
+                                    {"x": 0.25, "y": 0.25},
+                                ]
+                            },
                         ],
+                        "categories": [{"name": "forest"}],
+                        "children": {},
                         "mid": "forest_complex",
                         "type": "semantic",
+                    },
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {"x": 0.5, "y": 0.5},
+                                    {"x": 0.7, "y": 0.5},
+                                    {"x": 0.7, "y": 0.7},
+                                ]
+                            }
+                        ],
+                        "categories": [{"name": "forest"}],
                         "children": {},
-                    }
+                        "mid": "forest_complex",
+                        "type": "semantic",
+                    },
                 ]
             }
         }
