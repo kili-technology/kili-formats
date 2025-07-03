@@ -91,7 +91,7 @@ def features_to_feature_collection(
     return {"type": "FeatureCollection", "features": list(features)}
 
 
-def _group_semantic_annotations_by_mid(annotations):
+def _group_semantic_annotations_by_mid(annotations) -> Dict[str, Any]:
     """Group semantic annotations by their mid (for multi-part polygons)."""
     grouped = defaultdict(list)
     for annotation in annotations:
@@ -103,7 +103,7 @@ def _group_semantic_annotations_by_mid(annotations):
     return grouped
 
 
-def _convert_flat_to_hierarchical_format(annotations_group):
+def _convert_flat_to_hierarchical_format(annotations_group) -> Dict[str, Any]:
     """Convert flat format annotations to hierarchical format.
 
     Args:
@@ -139,7 +139,7 @@ def _convert_flat_to_hierarchical_format(annotations_group):
         return base_ann
 
 
-def _is_hierarchical_format(bounding_poly):
+def _is_hierarchical_format(bounding_poly) -> bool:
     """Check if boundingPoly is in hierarchical format.
 
     Hierarchical: [ [ {normalizedVertices: [...]}, ... ], ... ]
