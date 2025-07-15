@@ -1093,3 +1093,102 @@ class TestComplexScenarios:
         kili_result = geojson_feature_collection_to_kili_json_response(geojson_result)
 
         assert kili_result == original_kili_response
+
+    def test_geojson_multipolygon_feature_same_mid_for_all_parts(self):
+        """Test that all parts of a MultiPolygon get the same mid."""
+        multipolygon = {
+            "type": "Feature",
+            "geometry": {
+                "type": "MultiPolygon",
+                "coordinates": [
+                    [[[0, 0], [1, 0], [1, 1], [0, 0]]],  # First polygon
+                    [[[2, 2], [3, 2], [3, 3], [2, 2]]],  # Second polygon
+                    [[[4, 4], [5, 4], [5, 5], [4, 4]]],  # Third polygon
+                ],
+            },
+            "id": "forest_multipart_001",
+            "properties": {
+                "kili": {"categories": [{"name": "forest"}], "children": {}, "type": "semantic"}
+            },
+        }
+
+        result = geojson_polygon_feature_to_kili_segmentation_annotation(multipolygon)
+
+        # Should return 3 annotations (one for each polygon part)
+        assert len(result) == 3
+
+        # All annotations should have the same mid
+        mids = [ann["mid"] for ann in result]
+        assert all(mid == "forest_multipart_001" for mid in mids)
+
+        # Each annotation should have the correct structure
+        for i, annotation in enumerate(result):
+            assert annotation["type"] == "semantic"
+            assert annotation["categories"] == [{"name": "forest"}]
+            assert annotation["children"] == {}
+            assert annotation["mid"] == "forest_multipart_001"
+            assert len(annotation["boundingPoly"]) == 1  # Single ring per part
+
+            # Check coordinates match the expected polygon part
+            expected_coords = [
+                [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}],
+                [{"x": 2, "y": 2}, {"x": 3, "y": 2}, {"x": 3, "y": 3}],
+                [{"x": 4, "y": 4}, {"x": 5, "y": 4}, {"x": 5, "y": 5}],
+            ]
+            assert annotation["boundingPoly"][0]["normalizedVertices"] == expected_coords[i]
+
+    def test_geojson_multipolygon_feature_custom_mid_override(self):
+        """Test that custom mid parameter overrides the feature id."""
+        multipolygon = {
+            "type": "Feature",
+            "geometry": {
+                "type": "MultiPolygon",
+                "coordinates": [
+                    [[[0, 0], [1, 0], [1, 1], [0, 0]]],
+                    [[[2, 2], [3, 2], [3, 3], [2, 2]]],
+                ],
+            },
+            "id": "original_id",
+            "properties": {
+                "kili": {"categories": [{"name": "water"}], "children": {}, "type": "semantic"}
+            },
+        }
+
+        custom_mid = "custom_water_id_123"
+        result = geojson_polygon_feature_to_kili_segmentation_annotation(
+            multipolygon, mid=custom_mid
+        )
+
+        # Should return 2 annotations
+        assert len(result) == 2
+
+        # Both should have the custom mid, not the original feature id
+        for annotation in result:
+            assert annotation["mid"] == custom_mid
+            assert annotation["mid"] != "original_id"
+
+    def test_geojson_multipolygon_feature_no_id_generates_uuid(self):
+        """Test that when no feature id is provided, a mid is generated and used for all parts."""
+        multipolygon = {
+            "type": "Feature",
+            "geometry": {
+                "type": "MultiPolygon",
+                "coordinates": [
+                    [[[0, 0], [1, 0], [1, 1], [0, 0]]],
+                    [[[2, 2], [3, 2], [3, 3], [2, 2]]],
+                ],
+            },
+            "properties": {
+                "kili": {"categories": [{"name": "building"}], "children": {}, "type": "semantic"}
+            },
+        }
+
+        result = geojson_polygon_feature_to_kili_segmentation_annotation(multipolygon)
+
+        # Should return 2 annotations
+        assert len(result) == 2
+
+        # Both should have the same generated UUID
+        mid_1 = result[0]["mid"]
+        mid_2 = result[1]["mid"]
+        assert mid_1 == mid_2
