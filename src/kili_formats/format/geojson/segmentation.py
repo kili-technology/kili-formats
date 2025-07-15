@@ -1,5 +1,6 @@
 """Geojson segmentation utilities."""
 
+import uuid
 from typing import Any, Dict, List, Optional
 
 
@@ -287,6 +288,7 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
             If not provided, the children are taken from the `kili` key of the geojson feature properties.
         mid: The mid of the annotation.
             If not provided, the mid is taken from the `id` key of the geojson feature.
+            If no id is available, a new UUID is generated.
 
     Returns:
         A list of Kili segmentation annotations. Each annotation has a flat boundingPoly structure.
@@ -386,6 +388,8 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
         annotation_mid = str(mid)
     elif "id" in polygon:
         annotation_mid = str(polygon["id"])
+    else:
+        annotation_mid = str(uuid.uuid4())
 
     coords = polygon["geometry"]["coordinates"]
     annotations = []
@@ -400,10 +404,8 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
                 {"normalizedVertices": [{"x": coord[0], "y": coord[1]} for coord in ring[:-1]]}
                 for ring in coords
             ],
+            "mid": annotation_mid,
         }
-
-        if annotation_mid is not None:
-            ret["mid"] = annotation_mid
 
         annotations.append(ret)
 
@@ -418,10 +420,8 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
                     {"normalizedVertices": [{"x": coord[0], "y": coord[1]} for coord in ring[:-1]]}
                     for ring in polygon_coords
                 ],
+                "mid": annotation_mid,
             }
-
-            if annotation_mid is not None:
-                ret["mid"] = annotation_mid
 
             annotations.append(ret)
 
