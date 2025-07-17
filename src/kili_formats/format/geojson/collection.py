@@ -12,10 +12,13 @@ from .classification import (
     kili_classification_annotation_to_geojson_non_localised_feature,
 )
 from .exceptions import ConversionError
+from .geometrycollection import geojson_geometrycollection_feature_to_kili_annotations
 from .line import (
     geojson_linestring_feature_to_kili_line_annotation,
     kili_line_annotation_to_geojson_linestring_feature,
 )
+from .multilinestring import geojson_multilinestring_feature_to_kili_line_annotations
+from .multipoint import geojson_multipoint_feature_to_kili_point_annotations
 from .point import (
     geojson_point_feature_to_kili_point_annotation,
     kili_point_annotation_to_geojson_point_feature,
@@ -383,24 +386,33 @@ def geojson_feature_collection_to_kili_json_response(
                 raise ValueError("Invalid kili property in non localised feature")
             continue
 
-        if feature.get("properties").get("kili", {}).get("type") is None:
-            raise ValueError(f"Annotation `type` is missing in the GeoJson feature {feature}")
+        geometry_type = feature["geometry"]["type"]
 
-        annotation_tool = feature["properties"]["kili"]["type"]
+        if geometry_type == "GeometryCollection":
+            kili_annotations = geojson_geometrycollection_feature_to_kili_annotations(feature)
+        elif geometry_type == "MultiPoint":
+            kili_annotations = geojson_multipoint_feature_to_kili_point_annotations(feature)
+        elif geometry_type == "MultiLineString":
+            kili_annotations = geojson_multilinestring_feature_to_kili_line_annotations(feature)
+        else:
+            if feature.get("properties").get("kili", {}).get("type") is None:
+                raise ValueError(f"Annotation `type` is missing in the GeoJson feature {feature}")
 
-        if annotation_tool not in annotation_tool_to_converter:
-            raise ValueError(f"Annotation tool {annotation_tool} is not supported.")
+            annotation_tool = feature["properties"]["kili"]["type"]
 
-        kili_annotation = annotation_tool_to_converter[annotation_tool](feature)
+            if annotation_tool not in annotation_tool_to_converter:
+                raise ValueError(f"Annotation tool {annotation_tool} is not supported.")
+
+            kili_annotation = annotation_tool_to_converter[annotation_tool](feature)
+            kili_annotations = (
+                kili_annotation if isinstance(kili_annotation, list) else [kili_annotation]
+            )
 
         if job_name not in json_response:
             json_response[job_name] = {}
         if "annotations" not in json_response[job_name]:
             json_response[job_name]["annotations"] = []
 
-        if isinstance(kili_annotation, list):
-            json_response[job_name]["annotations"].extend(kili_annotation)
-        else:
-            json_response[job_name]["annotations"].append(kili_annotation)
+        json_response[job_name]["annotations"].extend(kili_annotations)
 
     return json_response

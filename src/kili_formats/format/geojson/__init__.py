@@ -10,11 +10,14 @@ from .collection import (
     geojson_feature_collection_to_kili_json_response,
     kili_json_response_to_feature_collection,
 )
+from .geometrycollection import geojson_geometrycollection_feature_to_kili_annotations
 from .line import (
     geojson_linestring_feature_to_kili_line_annotation,
     kili_line_annotation_to_geojson_linestring_feature,
     kili_line_to_geojson_linestring,
 )
+from .multilinestring import geojson_multilinestring_feature_to_kili_line_annotations
+from .multipoint import geojson_multipoint_feature_to_kili_point_annotations
 from .point import (
     geojson_point_feature_to_kili_point_annotation,
     kili_point_annotation_to_geojson_point_feature,
@@ -43,6 +46,9 @@ __all__ = [
     "geojson_polygon_feature_to_kili_segmentation_annotation",
     "geojson_point_feature_to_kili_point_annotation",
     "geojson_linestring_feature_to_kili_line_annotation",
+    "geojson_multipoint_feature_to_kili_point_annotations",
+    "geojson_multilinestring_feature_to_kili_line_annotations",
+    "geojson_geometrycollection_feature_to_kili_annotations",
     "kili_bbox_annotation_to_geojson_polygon_feature",
     "kili_bbox_to_geojson_polygon",
     "kili_line_annotation_to_geojson_linestring_feature",
