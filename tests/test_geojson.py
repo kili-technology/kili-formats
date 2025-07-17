@@ -1192,3 +1192,121 @@ class TestComplexScenarios:
         mid_1 = result[0]["mid"]
         mid_2 = result[1]["mid"]
         assert mid_1 == mid_2
+
+
+class TestMultiPointConversion:
+    def test_geojson_multipoint_feature_to_kili_point_annotations(self):
+        from kili_formats.format.geojson import (
+            geojson_multipoint_feature_to_kili_point_annotations,
+        )
+
+        multipoint = {
+            "type": "Feature",
+            "geometry": {"type": "MultiPoint", "coordinates": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]},
+            "id": "stations_001",
+            "properties": {
+                "kili": {"categories": [{"name": "station"}], "children": {}, "type": "marker"}
+            },
+        }
+        result = geojson_multipoint_feature_to_kili_point_annotations(multipoint)
+
+        assert len(result) == 3
+        for i, annotation in enumerate(result):
+            assert annotation["type"] == "marker"
+            assert annotation["categories"] == [{"name": "station"}]
+            assert annotation["point"]["x"] == multipoint["geometry"]["coordinates"][i][0]
+            assert annotation["point"]["y"] == multipoint["geometry"]["coordinates"][i][1]
+
+
+class TestMultiLineStringConversion:
+    def test_geojson_multilinestring_feature_to_kili_line_annotations(self):
+        from kili_formats.format.geojson import (
+            geojson_multilinestring_feature_to_kili_line_annotations,
+        )
+
+        multilinestring = {
+            "type": "Feature",
+            "geometry": {
+                "type": "MultiLineString",
+                "coordinates": [[[1.0, 2.0], [3.0, 4.0]], [[5.0, 6.0], [7.0, 8.0]]],
+            },
+            "id": "metro_lines_001",
+            "properties": {
+                "kili": {"categories": [{"name": "metro_line"}], "children": {}, "type": "polyline"}
+            },
+        }
+        result = geojson_multilinestring_feature_to_kili_line_annotations(multilinestring)
+
+        assert len(result) == 2
+        for i, annotation in enumerate(result):
+            assert annotation["type"] == "polyline"
+            assert annotation["categories"] == [{"name": "metro_line"}]
+            assert len(annotation["polyline"]) == 2
+
+
+class TestGeometryCollectionConversion:
+    def test_geojson_geometrycollection_feature_to_kili_annotations(self):
+        from kili_formats.format.geojson import (
+            geojson_geometrycollection_feature_to_kili_annotations,
+        )
+
+        geometrycollection = {
+            "type": "Feature",
+            "geometry": {
+                "type": "GeometryCollection",
+                "geometries": [
+                    {"type": "Point", "coordinates": [1.0, 2.0]},
+                    {"type": "LineString", "coordinates": [[3.0, 4.0], [5.0, 6.0]]},
+                    {
+                        "type": "Polygon",
+                        "coordinates": [
+                            [[7.0, 8.0], [9.0, 8.0], [9.0, 10.0], [7.0, 10.0], [7.0, 8.0]]
+                        ],
+                    },
+                ],
+            },
+            "id": "complex_001",
+            "properties": {"kili": {"categories": [{"name": "complex"}], "children": {}}},
+        }
+        result = geojson_geometrycollection_feature_to_kili_annotations(geometrycollection)
+
+        assert len(result) == 3
+
+        assert result[0]["type"] == "marker"
+        assert result[0]["point"] == {"x": 1.0, "y": 2.0}
+        assert result[0]["mid"] == "complex_001"
+
+        assert result[1]["type"] == "polyline"
+        assert len(result[1]["polyline"]) == 2
+        assert result[1]["mid"] == "complex_001"
+
+        assert result[2]["type"] == "polygon"
+        assert len(result[2]["boundingPoly"][0]["normalizedVertices"]) == 4
+        assert result[2]["mid"] == "complex_001"
+
+    def test_geometrycollection_with_type_filter(self):
+        from kili_formats.format.geojson import (
+            geojson_geometrycollection_feature_to_kili_annotations,
+        )
+
+        geometrycollection = {
+            "type": "Feature",
+            "geometry": {
+                "type": "GeometryCollection",
+                "geometries": [
+                    {"type": "Point", "coordinates": [1.0, 2.0]},
+                    {"type": "LineString", "coordinates": [[3.0, 4.0], [5.0, 6.0]]},
+                    {
+                        "type": "Polygon",
+                        "coordinates": [[[7.0, 8.0], [9.0, 8.0], [9.0, 10.0], [7.0, 8.0]]],
+                    },
+                ],
+            },
+            "properties": {
+                "kili": {"type": "marker", "categories": [{"name": "complex"}], "children": {}}
+            },
+        }
+        result = geojson_geometrycollection_feature_to_kili_annotations(geometrycollection)
+
+        assert len(result) == 1
+        assert result[0]["type"] == "marker"
