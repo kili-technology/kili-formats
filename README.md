@@ -33,3 +33,11 @@ clean_json_response(asset)
 ## Development
 
 If you want to contribute, here are the [installation steps](CONTRIBUTING.md)
+
+## Release
+
+To release a new version:
+
+1. Update pyproject.toml with the new version number
+2. Tag the merge commit
+3. Create a release note using the tag previously created
