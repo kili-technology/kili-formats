@@ -9,6 +9,7 @@ from src.kili_formats.tool.annotations_to_json_response import (
     AnnotationsToJsonResponseConverter,
 )
 
+from .fakes.geo import test_cases_full as test_cases_full_geo
 from .fakes.image import (
     image_asset,
     image_asset_rotated,
@@ -26,6 +27,7 @@ from .fakes.pdf import (
 from .fakes.text import text_asset, text_project, text_project_asset_unnormalized
 from .fakes.video import (
     test_cases,
+    test_cases_full,
     video_asset,
     video_project,
     video_project_asset_unnormalized,
@@ -128,3 +130,64 @@ def test_video_object_detection_annotation_to_json_response(
                         annotation_value["categories"][0]
                         == expected_latest_label_result["jsonResponse"][job]["category"][0]["name"]
                     )
+
+
+@pytest.mark.parametrize(
+    "json_interface, latest_label_annotations, expected_latest_label_result", test_cases_full
+)
+def test_full_annotation_to_json_response_video(
+    json_interface, latest_label_annotations, expected_latest_label_result
+):
+    """Test the conversion from annotations to jsonResponse."""
+    with TemporaryDirectory() as tmp_dir:
+        video_path = tmp_dir / Path("video1.mp4")
+        video_path.write_bytes(b"fake video content")
+        asset = {
+            "id": "fake_asset_id",
+            "resolution": {"width": 1920, "height": 1080},
+            "content": str(video_path),
+            "jsonContent": "",
+        }
+
+        converter = AnnotationsToJsonResponseConverter(
+            json_interface=json_interface,
+            project_input_type="VIDEO",
+        )
+        converter.patch_label_json_response(
+            asset, latest_label_annotations, latest_label_annotations["annotations"]
+        )
+
+        assert latest_label_annotations["labelType"] == expected_latest_label_result["labelType"]
+        assert latest_label_annotations["author"] == expected_latest_label_result["author"]
+
+        assert (
+            latest_label_annotations["jsonResponse"] == expected_latest_label_result["jsonResponse"]
+        )
+
+
+@pytest.mark.parametrize(
+    "json_interface, latest_label_annotations, expected_latest_label_result", test_cases_full_geo
+)
+def test_full_annotation_to_json_response_geo(
+    json_interface, latest_label_annotations, expected_latest_label_result
+):
+    """Test the conversion from annotations to jsonResponse."""
+    asset = {
+        "id": "fake_asset_id",
+        "resolution": {"width": 1920, "height": 1080},
+        "content": "",
+        "jsonContent": "",
+    }
+
+    converter = AnnotationsToJsonResponseConverter(
+        json_interface=json_interface,
+        project_input_type="GEOSPATIAL",
+    )
+    converter.patch_label_json_response(
+        asset, latest_label_annotations, latest_label_annotations["annotations"]
+    )
+
+    assert latest_label_annotations["labelType"] == expected_latest_label_result["labelType"]
+    assert latest_label_annotations["author"] == expected_latest_label_result["author"]
+
+    assert latest_label_annotations["jsonResponse"] == expected_latest_label_result["jsonResponse"]

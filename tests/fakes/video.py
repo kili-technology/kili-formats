@@ -787,6 +787,197 @@ latest_label_annotations_asset_level = {
     "labelType": "REVIEW",
     "modelName": None,
 }
+latest_label_annotations_nested = {
+    "annotations": [
+        {
+            "id": "20251106091226411-5",
+            "job": "OBJECT_DETECTION_JOB",
+            "path": [],
+            "labelId": "cmhn5i4cn00fy7k1a2ywb0ttm",
+            "frames": [{"start": 1, "end": 8, "__typename": "FrameInterval"}],
+            "keyAnnotations": [
+                {
+                    "id": "20251106091226411-5-1",
+                    "frame": 1,
+                    "annotationValue": {
+                        "id": "20251106091226411-5-1",
+                        "isPrediction": False,
+                        "vertices": [
+                            [
+                                [
+                                    {"x": 0.3234811165845649, "y": 0.3913519430760809},
+                                    {"x": 0.3234811165845649, "y": 0.32567049808429116},
+                                    {"x": 0.36206896551724144, "y": 0.32567049808429116},
+                                    {"x": 0.36206896551724144, "y": 0.3913519430760809},
+                                ]
+                            ]
+                        ],
+                        "__typename": "ObjectDetectionAnnotationValue",
+                    },
+                    "__typename": "VideoObjectDetectionKeyAnnotation",
+                }
+            ],
+            "__typename": "VideoObjectDetectionAnnotation",
+            "name": "Car 4",
+            "category": "CAR",
+            "mid": "20251106091224846-4",
+        },
+        {
+            "id": "20251106091233205-8",
+            "job": "CLASSIFICATION_JOB",
+            "path": [["20251106091226411-5", "CAR"]],
+            "labelId": "cmhn5i4cn00fy7k1a2ywb0ttm",
+            "frames": [
+                {"start": 2, "end": 5, "__typename": "FrameInterval"},
+                {"start": 7, "end": 8, "__typename": "FrameInterval"},
+            ],
+            "keyAnnotations": [
+                {
+                    "id": "20251106091233205-8-2",
+                    "frame": 2,
+                    "annotationValue": {
+                        "id": "20251106091233205-8-2",
+                        "isPrediction": False,
+                        "categories": ["A"],
+                        "__typename": "ClassificationAnnotationValue",
+                    },
+                    "__typename": "VideoClassificationKeyAnnotation",
+                },
+                {
+                    "id": "20251106091233205-8-3",
+                    "frame": 3,
+                    "annotationValue": {
+                        "id": "20251106091233205-8-3",
+                        "isPrediction": False,
+                        "categories": ["A"],
+                        "__typename": "ClassificationAnnotationValue",
+                    },
+                    "__typename": "VideoClassificationKeyAnnotation",
+                },
+                {
+                    "id": "20251106091233205-8-5",
+                    "frame": 5,
+                    "annotationValue": {
+                        "id": "20251106091233205-8-5",
+                        "isPrediction": False,
+                        "categories": ["B"],
+                        "__typename": "ClassificationAnnotationValue",
+                    },
+                    "__typename": "VideoClassificationKeyAnnotation",
+                },
+                {
+                    "id": "20251106091233205-8-7",
+                    "frame": 7,
+                    "annotationValue": {
+                        "id": "20251106091233205-8-7",
+                        "isPrediction": False,
+                        "categories": ["A"],
+                        "__typename": "ClassificationAnnotationValue",
+                    },
+                    "__typename": "VideoClassificationKeyAnnotation",
+                },
+            ],
+            "__typename": "VideoClassificationAnnotation",
+        },
+        {
+            "id": "20251106091234567-9",
+            "job": "CLASSIFICATION_JOB_0",
+            "path": [["20251106091226411-5", "CAR"], ["20251106091233205-8", "A"]],
+            "labelId": "cmhn5i4cn00fy7k1a2ywb0ttm",
+            "frames": [
+                {"start": 2, "end": 4, "__typename": "FrameInterval"},
+                {"start": 7, "end": 8, "__typename": "FrameInterval"},
+            ],
+            "keyAnnotations": [
+                {
+                    "id": "20251106091234567-9-2",
+                    "frame": 2,
+                    "annotationValue": {
+                        "id": "20251106091234567-9-2",
+                        "isPrediction": False,
+                        "categories": ["AA"],
+                        "__typename": "ClassificationAnnotationValue",
+                    },
+                    "__typename": "VideoClassificationKeyAnnotation",
+                },
+                {
+                    "id": "20251106091234567-9-3",
+                    "frame": 3,
+                    "annotationValue": {
+                        "id": "20251106091234567-9-3",
+                        "isPrediction": False,
+                        "categories": ["AA"],
+                        "__typename": "ClassificationAnnotationValue",
+                    },
+                    "__typename": "VideoClassificationKeyAnnotation",
+                },
+                {
+                    "id": "20251106091234567-9-4",
+                    "frame": 4,
+                    "annotationValue": {
+                        "id": "20251106091234567-9-4",
+                        "isPrediction": False,
+                        "categories": ["AA", "AB", "AC"],
+                        "__typename": "ClassificationAnnotationValue",
+                    },
+                    "__typename": "VideoClassificationKeyAnnotation",
+                },
+            ],
+            "__typename": "VideoClassificationAnnotation",
+        },
+        {
+            "id": "20251106091236201-10",
+            "job": "CLASSIFICATION_JOB_1",
+            "path": [
+                ["20251106091226411-5", "CAR"],
+                ["20251106091233205-8", "A"],
+                ["20251106091234567-9", "AA"],
+            ],
+            "labelId": "cmhn5i4cn00fy7k1a2ywb0ttm",
+            "frames": [
+                {"start": 2, "end": 4, "__typename": "FrameInterval"},
+                {"start": 7, "end": 8, "__typename": "FrameInterval"},
+            ],
+            "keyAnnotations": [
+                {
+                    "id": "20251106091236201-10-2",
+                    "frame": 2,
+                    "annotationValue": {
+                        "id": "20251106091236201-10-2",
+                        "isPrediction": False,
+                        "categories": ["AAA", "AAB"],
+                        "__typename": "ClassificationAnnotationValue",
+                    },
+                    "__typename": "VideoClassificationKeyAnnotation",
+                },
+                {
+                    "id": "20251106091236201-10-3",
+                    "frame": 3,
+                    "annotationValue": {
+                        "id": "20251106091236201-10-3",
+                        "isPrediction": False,
+                        "categories": ["AAB"],
+                        "__typename": "ClassificationAnnotationValue",
+                    },
+                    "__typename": "VideoClassificationKeyAnnotation",
+                },
+            ],
+            "__typename": "VideoClassificationAnnotation",
+        },
+    ],
+    "author": {
+        "email": "test+admin@kili-technology.com",
+        "firstname": "Test",
+        "id": "user-1",
+        "lastname": "Admin",
+    },
+    "createdAt": "2025-06-02T13:24:37.078Z",
+    "isLatestLabelForUser": True,
+    "isSentBackToQueue": False,
+    "jsonResponse": {"0": {"ANNOTATION_JOB_COUNTER": {}, "ANNOTATION_NAMES_JOB": {}}},
+    "labelType": "REVIEW",
+    "modelName": None,
+}
 
 expected_latest_label_result_rectangle = {
     "author": {
@@ -1623,6 +1814,518 @@ expected_latest_label_result_asset_level = {
     "labelType": "REVIEW",
     "modelName": None,
 }
+expected_latest_label_result_nested = {
+    "author": {
+        "email": "test+admin@kili-technology.com",
+        "firstname": "Test",
+        "id": "user-1",
+        "lastname": "Admin",
+    },
+    "createdAt": "2025-06-02T13:24:37.078Z",
+    "isLatestLabelForUser": True,
+    "isSentBackToQueue": False,
+    "jsonResponse": {
+        "0": {
+            "ANNOTATION_JOB_COUNTER": {
+                "OBJECT_DETECTION_JOB": {
+                    "CAR": 1,
+                },
+            },
+            "ANNOTATION_NAMES_JOB": {
+                "20251106091224846-4": "Car 4",
+            },
+        },
+        "1": {
+            "OBJECT_DETECTION_JOB": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.3913519430760809,
+                                    },
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.3913519430760809,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "CAR",
+                            },
+                        ],
+                        "children": {},
+                        "isKeyFrame": True,
+                        "mid": "20251106091224846-4",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "2": {
+            "OBJECT_DETECTION_JOB": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.3913519430760809,
+                                    },
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.3913519430760809,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "CAR",
+                            },
+                        ],
+                        "children": {
+                            "CLASSIFICATION_JOB": {
+                                "categories": [
+                                    {
+                                        "children": {
+                                            "CLASSIFICATION_JOB_0": {
+                                                "categories": [
+                                                    {
+                                                        "children": {
+                                                            "CLASSIFICATION_JOB_1": {
+                                                                "categories": [
+                                                                    {
+                                                                        "name": "AAA",
+                                                                    },
+                                                                    {
+                                                                        "name": "AAB",
+                                                                    },
+                                                                ],
+                                                                "isKeyFrame": True,
+                                                            },
+                                                        },
+                                                        "name": "AA",
+                                                    },
+                                                ],
+                                                "isKeyFrame": True,
+                                            },
+                                        },
+                                        "name": "A",
+                                    },
+                                ],
+                                "isKeyFrame": True,
+                            },
+                        },
+                        "isKeyFrame": False,
+                        "mid": "20251106091224846-4",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "3": {
+            "OBJECT_DETECTION_JOB": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.3913519430760809,
+                                    },
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.3913519430760809,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "CAR",
+                            },
+                        ],
+                        "children": {
+                            "CLASSIFICATION_JOB": {
+                                "categories": [
+                                    {
+                                        "children": {
+                                            "CLASSIFICATION_JOB_0": {
+                                                "categories": [
+                                                    {
+                                                        "children": {
+                                                            "CLASSIFICATION_JOB_1": {
+                                                                "categories": [
+                                                                    {
+                                                                        "name": "AAB",
+                                                                    },
+                                                                ],
+                                                                "isKeyFrame": True,
+                                                            }
+                                                        },
+                                                        "name": "AA",
+                                                    },
+                                                ],
+                                                "isKeyFrame": True,
+                                            },
+                                        },
+                                        "name": "A",
+                                    },
+                                ],
+                                "isKeyFrame": True,
+                            },
+                        },
+                        "isKeyFrame": False,
+                        "mid": "20251106091224846-4",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "4": {
+            "OBJECT_DETECTION_JOB": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.3913519430760809,
+                                    },
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.3913519430760809,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "CAR",
+                            },
+                        ],
+                        "children": {
+                            "CLASSIFICATION_JOB": {
+                                "categories": [
+                                    {
+                                        "children": {
+                                            "CLASSIFICATION_JOB_0": {
+                                                "categories": [
+                                                    {
+                                                        "children": {
+                                                            "CLASSIFICATION_JOB_1": {
+                                                                "categories": [
+                                                                    {
+                                                                        "name": "AAB",
+                                                                    },
+                                                                ],
+                                                                "isKeyFrame": False,
+                                                            }
+                                                        },
+                                                        "name": "AA",
+                                                    },
+                                                    {
+                                                        "name": "AB",
+                                                    },
+                                                    {
+                                                        "name": "AC",
+                                                    },
+                                                ],
+                                                "isKeyFrame": True,
+                                            },
+                                        },
+                                        "name": "A",
+                                    },
+                                ],
+                                "isKeyFrame": False,
+                            },
+                        },
+                        "isKeyFrame": False,
+                        "mid": "20251106091224846-4",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "5": {
+            "OBJECT_DETECTION_JOB": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.3913519430760809,
+                                    },
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.3913519430760809,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "CAR",
+                            },
+                        ],
+                        "children": {
+                            "CLASSIFICATION_JOB": {
+                                "categories": [
+                                    {
+                                        "name": "B",
+                                    },
+                                ],
+                                "isKeyFrame": True,
+                            },
+                        },
+                        "isKeyFrame": False,
+                        "mid": "20251106091224846-4",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "6": {
+            "OBJECT_DETECTION_JOB": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.3913519430760809,
+                                    },
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.3913519430760809,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "CAR",
+                            },
+                        ],
+                        "children": {},
+                        "isKeyFrame": False,
+                        "mid": "20251106091224846-4",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "7": {
+            "OBJECT_DETECTION_JOB": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.3913519430760809,
+                                    },
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.3913519430760809,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "CAR",
+                            },
+                        ],
+                        "children": {
+                            "CLASSIFICATION_JOB": {
+                                "categories": [
+                                    {
+                                        "children": {
+                                            "CLASSIFICATION_JOB_0": {
+                                                "categories": [
+                                                    {
+                                                        "children": {
+                                                            "CLASSIFICATION_JOB_1": {
+                                                                "categories": [
+                                                                    {
+                                                                        "name": "AAB",
+                                                                    },
+                                                                ],
+                                                                "isKeyFrame": False,
+                                                            }
+                                                        },
+                                                        "name": "AA",
+                                                    },
+                                                    {
+                                                        "name": "AB",
+                                                    },
+                                                    {
+                                                        "name": "AC",
+                                                    },
+                                                ],
+                                                "isKeyFrame": False,
+                                            },
+                                        },
+                                        "name": "A",
+                                    },
+                                ],
+                                "isKeyFrame": True,
+                            },
+                        },
+                        "isKeyFrame": False,
+                        "mid": "20251106091224846-4",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+        "8": {
+            "OBJECT_DETECTION_JOB": {
+                "annotations": [
+                    {
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.3913519430760809,
+                                    },
+                                    {
+                                        "x": 0.3234811165845649,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.32567049808429116,
+                                    },
+                                    {
+                                        "x": 0.36206896551724144,
+                                        "y": 0.3913519430760809,
+                                    },
+                                ],
+                            },
+                        ],
+                        "categories": [
+                            {
+                                "name": "CAR",
+                            },
+                        ],
+                        "children": {
+                            "CLASSIFICATION_JOB": {
+                                "categories": [
+                                    {
+                                        "children": {
+                                            "CLASSIFICATION_JOB_0": {
+                                                "categories": [
+                                                    {
+                                                        "children": {
+                                                            "CLASSIFICATION_JOB_1": {
+                                                                "categories": [
+                                                                    {
+                                                                        "name": "AAB",
+                                                                    },
+                                                                ],
+                                                                "isKeyFrame": False,
+                                                            }
+                                                        },
+                                                        "name": "AA",
+                                                    },
+                                                    {
+                                                        "name": "AB",
+                                                    },
+                                                    {
+                                                        "name": "AC",
+                                                    },
+                                                ],
+                                                "isKeyFrame": False,
+                                            },
+                                        },
+                                        "name": "A",
+                                    },
+                                ],
+                                "isKeyFrame": False,
+                            },
+                        },
+                        "isKeyFrame": False,
+                        "mid": "20251106091224846-4",
+                        "type": "rectangle",
+                    },
+                ],
+            },
+        },
+    },
+    "labelType": "REVIEW",
+    "modelName": None,
+}
 
 json_interface_asset_level = {
     "jobs": {
@@ -1714,6 +2417,73 @@ json_interface_semantic = {
     }
 }
 
+json_interface_nested = {
+    "jobs": {
+        "OBJECT_DETECTION_JOB": {
+            "content": {
+                "categories": {
+                    "CAR": {
+                        "children": ["CLASSIFICATION_JOB"],
+                        "color": "#472CED",
+                        "name": "Car",
+                        "id": "category17",
+                    }
+                },
+                "input": "radio",
+            },
+            "instruction": "",
+            "mlTask": "OBJECT_DETECTION",
+            "required": 0,
+            "tools": ["rectangle"],
+            "isChild": False,
+            "isNew": False,
+        },
+        "CLASSIFICATION_JOB": {
+            "content": {
+                "categories": {
+                    "A": {"children": ["CLASSIFICATION_JOB_0"], "name": "A", "id": "category18"},
+                    "B": {"children": [], "name": "B", "id": "category19"},
+                },
+                "input": "radio",
+            },
+            "instruction": "",
+            "mlTask": "CLASSIFICATION",
+            "required": 0,
+            "isChild": True,
+            "isNew": False,
+        },
+        "CLASSIFICATION_JOB_0": {
+            "content": {
+                "categories": {
+                    "AA": {"children": ["CLASSIFICATION_JOB_1"], "name": "AA", "id": "category20"},
+                    "AB": {"children": [], "name": "AB", "id": "category21"},
+                    "AC": {"children": [], "name": "AC", "id": "category22"},
+                },
+                "input": "checkbox",
+            },
+            "instruction": "",
+            "mlTask": "CLASSIFICATION",
+            "required": 0,
+            "isChild": True,
+            "isNew": False,
+        },
+        "CLASSIFICATION_JOB_1": {
+            "content": {
+                "categories": {
+                    "AAA": {"children": [], "name": "AAA", "id": "category23"},
+                    "AAB": {"children": [], "name": "AAB", "id": "category24"},
+                },
+                "input": "multipleDropdown",
+            },
+            "instruction": "",
+            "mlTask": "CLASSIFICATION",
+            "required": 0,
+            "isChild": True,
+            "isNew": False,
+        },
+    }
+}
+
 test_cases = [
     (
         json_interface_asset_level,
@@ -1749,5 +2519,13 @@ test_cases = [
         json_interface_semantic,
         latest_label_annotations_semantic_multipart,
         expected_latest_label_result_semantic_multipart,
+    ),
+]
+
+test_cases_full = [
+    (
+        json_interface_nested,
+        latest_label_annotations_nested,
+        expected_latest_label_result_nested,
     ),
 ]
