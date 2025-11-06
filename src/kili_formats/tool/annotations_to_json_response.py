@@ -518,9 +518,7 @@ def _compute_children_json_resp(
         if child_ann["__typename"] == "ClassificationAnnotation":
             child_ann = cast(ClassificationAnnotation, child_ann)
             other_annotations = cast(List[ClassicAnnotation], other_annotations)
-            sub_job_resp = _classification_annotation_to_json_response(
-                child_ann, _get_child_annotations(child_ann, other_annotations)
-            )
+            sub_job_resp = _classification_annotation_to_json_response(child_ann, other_annotations)
 
         elif child_ann["__typename"] == "RankingAnnotation":
             child_ann = cast(RankingAnnotation, child_ann)
@@ -534,7 +532,7 @@ def _compute_children_json_resp(
             child_ann = cast(VideoClassificationAnnotation, child_ann)
             other_annotations = cast(List[VideoAnnotation], other_annotations)
             sub_job_resp = _video_classification_annotation_to_json_response(
-                child_ann, _get_child_annotations(child_ann, other_annotations)
+                child_ann, other_annotations
             )
 
         elif child_ann["__typename"] == "VideoTranscriptionAnnotation":
