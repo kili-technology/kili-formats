@@ -9,6 +9,7 @@ from src.kili_formats.tool.annotations_to_json_response import (
     AnnotationsToJsonResponseConverter,
 )
 
+from .fakes.geo import test_cases_full as test_cases_full_geo
 from .fakes.image import (
     image_asset,
     image_asset_rotated,
@@ -134,7 +135,7 @@ def test_video_object_detection_annotation_to_json_response(
 @pytest.mark.parametrize(
     "json_interface, latest_label_annotations, expected_latest_label_result", test_cases_full
 )
-def test_full_annotation_to_json_response(
+def test_full_annotation_to_json_response_video(
     json_interface, latest_label_annotations, expected_latest_label_result
 ):
     """Test the conversion from annotations to jsonResponse."""
@@ -162,3 +163,31 @@ def test_full_annotation_to_json_response(
         assert (
             latest_label_annotations["jsonResponse"] == expected_latest_label_result["jsonResponse"]
         )
+
+
+@pytest.mark.parametrize(
+    "json_interface, latest_label_annotations, expected_latest_label_result", test_cases_full_geo
+)
+def test_full_annotation_to_json_response_geo(
+    json_interface, latest_label_annotations, expected_latest_label_result
+):
+    """Test the conversion from annotations to jsonResponse."""
+    asset = {
+        "id": "fake_asset_id",
+        "resolution": {"width": 1920, "height": 1080},
+        "content": "",
+        "jsonContent": "",
+    }
+
+    converter = AnnotationsToJsonResponseConverter(
+        json_interface=json_interface,
+        project_input_type="GEOSPATIAL",
+    )
+    converter.patch_label_json_response(
+        asset, latest_label_annotations, latest_label_annotations["annotations"]
+    )
+
+    assert latest_label_annotations["labelType"] == expected_latest_label_result["labelType"]
+    assert latest_label_annotations["author"] == expected_latest_label_result["author"]
+
+    assert latest_label_annotations["jsonResponse"] == expected_latest_label_result["jsonResponse"]
