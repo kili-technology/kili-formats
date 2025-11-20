@@ -17,7 +17,7 @@ jobs:
     name: Pylint test
     strategy:
       matrix:
-        python-version: ["3.9", "3.12"]
+        python-version: ["3.9", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python ${{ matrix.python-version }}
@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        version: ["3.9", "3.12"]
+        version: ["3.9", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -63,6 +63,8 @@ jobs:
             python-version: 3.9
           - os: ubuntu-latest
             python-version: 3.12
+          - os: ubuntu-latest
+            python-version: 3.13
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repo
