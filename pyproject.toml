@@ -1,10 +1,10 @@
 [project]
 name = "kili-formats"
-version = "0.2.10"
+version = "1.0.0"
 description = ""
 authors = [{ name = "Kili Technology", email = "contact@kili-technology.com" }]
 license = { file = "LICENSE.txt" }
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 readme = "README.md"
 dependencies = [
   "typing-extensions >= 4.1.0, < 5.0.0"
@@ -19,7 +19,7 @@ all = [
   "numpy >= 2, < 3",
   "shapely >= 1.8, < 3",
   # image
-  "Pillow >=9.0.0, <11.0.0",
+  "Pillow >=9.0.0, <13.0.0",
   # video
   "ffmpeg-python >= 0.2.0, < 0.3.0"
 ]
@@ -34,7 +34,7 @@ dev = [
   # optional dependencies - coco
   "shapely >= 1.8, < 3",
   # optional dependencies - image
-  "Pillow >=9.0.0, <11.0.0",
+  "Pillow >=9.0.0, <13.0.0",
   # optional dependencies - video
   "ffmpeg-python >= 0.2.0, < 0.3.0"
 ]
@@ -43,7 +43,7 @@ coco = [
   "shapely >= 1.8, < 3"
 ]
 image = [
-  "Pillow >=9.0.0, <11.0.0"
+  "Pillow >=9.0.0, <13.0.0"
 ]
 video = [
   "ffmpeg-python >= 0.2.0, < 0.3.0"
@@ -62,11 +62,11 @@ exclude = '''
 
 [tool.isort]
 profile = "black"
-py_version = 38
+py_version = 310
 
 [tool.ruff]
 line-length = 100
-target-version = "py38"
+target-version = "py310"
 ignore = ["E501"]
 
 [tool.ruff.pydocstyle]
