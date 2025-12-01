@@ -277,9 +277,6 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
 ) -> List[Dict[str, Any]]:
     """Convert a geojson polygon feature to a list of Kili segmentation annotations.
 
-    For Polygon: returns a single annotation.
-    For MultiPolygon: returns N annotations (one per polygon part) with the same mid.
-
     Args:
         polygon: A geojson polygon feature.
         categories: The categories of the annotation.
@@ -291,11 +288,14 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
             If no id is available, a new UUID is generated.
 
     Returns:
-        A list of Kili segmentation annotations. Each annotation has a flat boundingPoly structure.
+        A list of Kili segmentation annotations. Each annotation has boundingPoly of dimension 2.
+
+        The first dimensions corresponds to the polygon parts (1 for Polygon, N for MultiPolygon).
+        The second dimension corresponds to the rings of each polygon part (exterior + holes).
 
     !!! Example
         ```python
-        # Polygon feature -> single annotation
+        # Polygon feature
         >>> polygon = {
         ...     'type': 'Feature',
         ...     'geometry': {
@@ -318,17 +318,17 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
         [
             {
                 'children': {},
-                'boundingPoly': [
+                'boundingPoly': [[
                     {'normalizedVertices': [{'x': 0, 'y': 0}, {'x': 1, 'y': 0}, {'x': 1, 'y': 1}]},
                     {'normalizedVertices': [{'x': 0.2, 'y': 0.2}, {'x': 0.8, 'y': 0.2}, {'x': 0.8, 'y': 0.8}]}
-                ],
+                ]],
                 'categories': [{'name': 'building'}],
                 'mid': 'building_001',
                 'type': 'semantic'
             }
         ]
 
-        # MultiPolygon feature -> multiple annotations with same mid
+        # MultiPolygon feature
         >>> multipolygon = {
         ...     'type': 'Feature',
         ...     'geometry': {
@@ -352,16 +352,8 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
             {
                 'children': {},
                 'boundingPoly': [
-                    {'normalizedVertices': [{'x': 0, 'y': 0}, {'x': 1, 'y': 0}, {'x': 1, 'y': 1}]}
-                ],
-                'categories': [{'name': 'forest'}],
-                'mid': 'forest_001',
-                'type': 'semantic'
-            },
-            {
-                'children': {},
-                'boundingPoly': [
-                    {'normalizedVertices': [{'x': 2, 'y': 2}, {'x': 3, 'y': 2}, {'x': 3, 'y': 3}]}
+                    [{'normalizedVertices': [{'x': 0, 'y': 0}, {'x': 1, 'y': 0}, {'x': 1, 'y': 1}]}],
+                    [{'normalizedVertices': [{'x': 2, 'y': 2}, {'x': 3, 'y': 2}, {'x': 3, 'y': 3}]}]
                 ],
                 'categories': [{'name': 'forest'}],
                 'mid': 'forest_001',
@@ -395,14 +387,15 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
     annotations = []
 
     if geometry_type == "Polygon":
-        # Single polygon: create one annotation
         ret = {
             "children": children,
             "categories": categories,
             "type": "semantic",
             "boundingPoly": [
-                {"normalizedVertices": [{"x": coord[0], "y": coord[1]} for coord in ring[:-1]]}
-                for ring in coords
+                [
+                    {"normalizedVertices": [{"x": coord[0], "y": coord[1]} for coord in ring[:-1]]}
+                    for ring in coords
+                ]
             ],
             "mid": annotation_mid,
         }
@@ -410,19 +403,20 @@ def geojson_polygon_feature_to_kili_segmentation_annotation(
         annotations.append(ret)
 
     else:
-        # MultiPolygon: create N annotations with same mid, one per polygon part
-        for polygon_coords in coords:
-            ret = {
-                "children": children,
-                "categories": categories,
-                "type": "semantic",
-                "boundingPoly": [
+        ret = {
+            "children": children,
+            "categories": categories,
+            "type": "semantic",
+            "boundingPoly": [
+                [
                     {"normalizedVertices": [{"x": coord[0], "y": coord[1]} for coord in ring[:-1]]}
                     for ring in polygon_coords
-                ],
-                "mid": annotation_mid,
-            }
+                ]
+                for polygon_coords in coords
+            ],
+            "mid": annotation_mid,
+        }
 
-            annotations.append(ret)
+        annotations.append(ret)
 
     return annotations

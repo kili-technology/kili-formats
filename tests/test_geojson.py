@@ -514,14 +514,22 @@ class TestGeojsonSegmentationToKili:
         expected = [
             {
                 "boundingPoly": [
-                    {"normalizedVertices": [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}]},
-                    {
-                        "normalizedVertices": [
-                            {"x": 0.2, "y": 0.2},
-                            {"x": 0.8, "y": 0.2},
-                            {"x": 0.8, "y": 0.8},
-                        ]
-                    },
+                    [
+                        {
+                            "normalizedVertices": [
+                                {"x": 0, "y": 0},
+                                {"x": 1, "y": 0},
+                                {"x": 1, "y": 1},
+                            ]
+                        },
+                        {
+                            "normalizedVertices": [
+                                {"x": 0.2, "y": 0.2},
+                                {"x": 0.8, "y": 0.2},
+                                {"x": 0.8, "y": 0.8},
+                            ]
+                        },
+                    ]
                 ],
                 "categories": [{"name": "building"}],
                 "children": {},
@@ -550,22 +558,30 @@ class TestGeojsonSegmentationToKili:
         expected = [
             {
                 "boundingPoly": [
-                    {"normalizedVertices": [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}]}
+                    [
+                        {
+                            "normalizedVertices": [
+                                {"x": 0, "y": 0},
+                                {"x": 1, "y": 0},
+                                {"x": 1, "y": 1},
+                            ]
+                        }
+                    ],
+                    [
+                        {
+                            "normalizedVertices": [
+                                {"x": 2, "y": 2},
+                                {"x": 3, "y": 2},
+                                {"x": 3, "y": 3},
+                            ]
+                        }
+                    ],
                 ],
                 "categories": [{"name": "forest"}],
                 "children": {},
                 "mid": "forest_001",
                 "type": "semantic",
-            },
-            {
-                "boundingPoly": [
-                    {"normalizedVertices": [{"x": 2, "y": 2}, {"x": 3, "y": 2}, {"x": 3, "y": 3}]}
-                ],
-                "categories": [{"name": "forest"}],
-                "children": {},
-                "mid": "forest_001",
-                "type": "semantic",
-            },
+            }
         ]
         assert result == expected
 
@@ -1035,41 +1051,37 @@ class TestComplexScenarios:
                 "annotations": [
                     {
                         "boundingPoly": [
-                            {
-                                "normalizedVertices": [
-                                    {"x": 0.1, "y": 0.1},
-                                    {"x": 0.3, "y": 0.1},
-                                    {"x": 0.3, "y": 0.3},
-                                ]
-                            },
-                            {
-                                "normalizedVertices": [
-                                    {"x": 0.15, "y": 0.15},
-                                    {"x": 0.25, "y": 0.15},
-                                    {"x": 0.25, "y": 0.25},
-                                ]
-                            },
+                            [
+                                {
+                                    "normalizedVertices": [
+                                        {"x": 0.1, "y": 0.1},
+                                        {"x": 0.3, "y": 0.1},
+                                        {"x": 0.3, "y": 0.3},
+                                    ]
+                                },
+                                {
+                                    "normalizedVertices": [
+                                        {"x": 0.15, "y": 0.15},
+                                        {"x": 0.25, "y": 0.15},
+                                        {"x": 0.25, "y": 0.25},
+                                    ]
+                                },
+                            ],
+                            [
+                                {
+                                    "normalizedVertices": [
+                                        {"x": 0.5, "y": 0.5},
+                                        {"x": 0.7, "y": 0.5},
+                                        {"x": 0.7, "y": 0.7},
+                                    ]
+                                }
+                            ],
                         ],
                         "categories": [{"name": "forest"}],
                         "children": {},
                         "mid": "forest_complex",
                         "type": "semantic",
-                    },
-                    {
-                        "boundingPoly": [
-                            {
-                                "normalizedVertices": [
-                                    {"x": 0.5, "y": 0.5},
-                                    {"x": 0.7, "y": 0.5},
-                                    {"x": 0.7, "y": 0.7},
-                                ]
-                            }
-                        ],
-                        "categories": [{"name": "forest"}],
-                        "children": {},
-                        "mid": "forest_complex",
-                        "type": "semantic",
-                    },
+                    }
                 ]
             }
         }
@@ -1094,7 +1106,7 @@ class TestComplexScenarios:
 
         assert kili_result == original_kili_response
 
-    def test_geojson_multipolygon_feature_same_mid_for_all_parts(self):
+    def test_geojson_multipolygon_feature(self):
         """Test that all parts of a MultiPolygon get the same mid."""
         multipolygon = {
             "type": "Feature",
@@ -1114,28 +1126,23 @@ class TestComplexScenarios:
 
         result = geojson_polygon_feature_to_kili_segmentation_annotation(multipolygon)
 
-        # Should return 3 annotations (one for each polygon part)
-        assert len(result) == 3
+        # Should return 1 annotations with a boundingPoly containing 3 parts
+        assert len(result) == 1
+        annotation = result[0]
+        assert annotation["type"] == "semantic"
+        assert annotation["categories"] == [{"name": "forest"}]
+        assert annotation["children"] == {}
+        assert annotation["mid"] == "forest_multipart_001"
+        assert len(annotation["boundingPoly"]) == 3
 
-        # All annotations should have the same mid
-        mids = [ann["mid"] for ann in result]
-        assert all(mid == "forest_multipart_001" for mid in mids)
-
-        # Each annotation should have the correct structure
-        for i, annotation in enumerate(result):
-            assert annotation["type"] == "semantic"
-            assert annotation["categories"] == [{"name": "forest"}]
-            assert annotation["children"] == {}
-            assert annotation["mid"] == "forest_multipart_001"
-            assert len(annotation["boundingPoly"]) == 1  # Single ring per part
-
-            # Check coordinates match the expected polygon part
-            expected_coords = [
-                [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}],
-                [{"x": 2, "y": 2}, {"x": 3, "y": 2}, {"x": 3, "y": 3}],
-                [{"x": 4, "y": 4}, {"x": 5, "y": 4}, {"x": 5, "y": 5}],
-            ]
-            assert annotation["boundingPoly"][0]["normalizedVertices"] == expected_coords[i]
+        # Check coordinates match the expected polygon part
+        expected_coords = [
+            [{"x": 0, "y": 0}, {"x": 1, "y": 0}, {"x": 1, "y": 1}],
+            [{"x": 2, "y": 2}, {"x": 3, "y": 2}, {"x": 3, "y": 3}],
+            [{"x": 4, "y": 4}, {"x": 5, "y": 4}, {"x": 5, "y": 5}],
+        ]
+        for i, poly in enumerate(annotation["boundingPoly"]):
+            assert poly[0]["normalizedVertices"] == expected_coords[i]
 
     def test_geojson_multipolygon_feature_custom_mid_override(self):
         """Test that custom mid parameter overrides the feature id."""
@@ -1159,39 +1166,11 @@ class TestComplexScenarios:
             multipolygon, mid=custom_mid
         )
 
-        # Should return 2 annotations
-        assert len(result) == 2
-
-        # Both should have the custom mid, not the original feature id
-        for annotation in result:
-            assert annotation["mid"] == custom_mid
-            assert annotation["mid"] != "original_id"
-
-    def test_geojson_multipolygon_feature_no_id_generates_uuid(self):
-        """Test that when no feature id is provided, a mid is generated and used for all parts."""
-        multipolygon = {
-            "type": "Feature",
-            "geometry": {
-                "type": "MultiPolygon",
-                "coordinates": [
-                    [[[0, 0], [1, 0], [1, 1], [0, 0]]],
-                    [[[2, 2], [3, 2], [3, 3], [2, 2]]],
-                ],
-            },
-            "properties": {
-                "kili": {"categories": [{"name": "building"}], "children": {}, "type": "semantic"}
-            },
-        }
-
-        result = geojson_polygon_feature_to_kili_segmentation_annotation(multipolygon)
-
-        # Should return 2 annotations
-        assert len(result) == 2
-
-        # Both should have the same generated UUID
-        mid_1 = result[0]["mid"]
-        mid_2 = result[1]["mid"]
-        assert mid_1 == mid_2
+        # Should return 1 annotation with the custom mid
+        assert len(result) == 1
+        annotation = result[0]
+        assert annotation["mid"] == custom_mid
+        assert annotation["mid"] != "original_id"
 
 
 class TestMultiPointConversion:
