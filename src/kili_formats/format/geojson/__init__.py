@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from .bbox import (
     geojson_polygon_feature_to_kili_bbox_annotation,
@@ -35,8 +35,22 @@ from .segmentation import (
 )
 
 
-def convert_from_kili_to_geojson_format(response: Dict[str, Any]):
-    return kili_json_response_to_feature_collection(response)
+def convert_from_kili_to_geojson_format(
+    response: Dict[str, Any],
+    json_interface: Optional[Dict[str, Any]] = None,
+    flatten_properties: bool = False,
+):
+    """Convert Kili json response to GeoJSON format.
+
+    Args:
+        response: Kili label json response
+        json_interface: Optional json interface for friendly property names
+        flatten_properties: If True, flatten properties for GIS-friendly format
+
+    Returns:
+        GeoJSON feature collection
+    """
+    return kili_json_response_to_feature_collection(response, json_interface, flatten_properties)
 
 
 __all__ = [
