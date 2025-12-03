@@ -331,14 +331,43 @@ def _flatten_properties_for_gis(
     """
     flattened = {}
 
+    # Check if this is a multi-select job
+    is_multi_select = _is_multi_select_job(json_interface, job_name)
+    job_friendly_name = _get_job_friendly_name(json_interface, job_name)
+
     # Set class attribute from main category
     if "categories" in kili_properties and kili_properties["categories"]:
-        main_category = kili_properties["categories"][0].get("name", "")
-        if main_category:
-            class_name = _get_category_friendly_name(json_interface, job_name, main_category)
-            flattened["class"] = class_name
+        categories = kili_properties["categories"]
 
-    # Flatten children classifications
+        # Get friendly names for all categories
+        category_friendly_names = [
+            _get_category_friendly_name(json_interface, job_name, cat.get("name", ""))
+            for cat in categories
+        ]
+
+        # Set class from first category
+        if category_friendly_names:
+            flattened["class"] = category_friendly_names[0]
+
+        # For root job, add a property with the job's friendly name
+        if is_multi_select:
+            # Multi-select: array of category names
+            flattened[job_friendly_name] = category_friendly_names
+        else:
+            # Single-select: just the value
+            if category_friendly_names:
+                flattened[job_friendly_name] = category_friendly_names[0]
+
+        # Process children for each category
+        for i, cat in enumerate(categories):
+            if "children" in cat and cat["children"]:
+                cat_friendly_name = category_friendly_names[i]
+                # Build prefix for nested properties
+                prefix = f"{job_friendly_name}.{cat_friendly_name}"
+                nested_props = _flatten_classification_tree(cat["children"], json_interface, prefix)
+                flattened.update(nested_props)
+
+    # Flatten children classifications (for non-classification features like semantic segmentation)
     if "children" in kili_properties and kili_properties["children"]:
         flat_children = _flatten_classification_tree(kili_properties["children"], json_interface)
         flattened.update(flat_children)
@@ -408,19 +437,31 @@ def kili_json_response_to_feature_collection(
     ann_tools_not_supported = set()
     for job_name, job_response in json_response.items():
         if "text" in job_response:
-            features.append(
-                kili_transcription_annotation_to_geojson_non_localised_feature(
-                    job_response, job_name
-                ),
+            feature = kili_transcription_annotation_to_geojson_non_localised_feature(
+                job_response, job_name
             )
+
+            # Flatten properties if requested (transcriptions typically don't have nested classifications)
+            if flatten_properties and "properties" in feature and "kili" in feature["properties"]:
+                feature["properties"] = _flatten_properties_for_gis(
+                    feature["properties"]["kili"], job_name, json_interface
+                )
+
+            features.append(feature)
             continue
 
         if "categories" in job_response:
-            features.append(
-                kili_classification_annotation_to_geojson_non_localised_feature(
-                    job_response, job_name
-                ),
+            feature = kili_classification_annotation_to_geojson_non_localised_feature(
+                job_response, job_name
             )
+
+            # Flatten properties if requested
+            if flatten_properties and "properties" in feature and "kili" in feature["properties"]:
+                feature["properties"] = _flatten_properties_for_gis(
+                    feature["properties"]["kili"], job_name, json_interface
+                )
+
+            features.append(feature)
             continue
 
         if "annotations" not in job_response:

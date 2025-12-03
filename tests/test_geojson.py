@@ -1670,6 +1670,59 @@ class TestPropertyFlattening:
         # Original nested structure
         assert properties["kili"]["categories"] == [{"name": "LAND"}]
 
+    def test_flatten_properties_classification_job(self):
+        """Test flattening works for classification jobs (non-localized features)."""
+        json_interface = {
+            "jobs": {
+                "CLASSIFICATION_JOB": {
+                    "content": {
+                        "categories": {
+                            "A": {"name": "Category A"},
+                            "B": {"name": "Category B"},
+                        },
+                        "input": "checkbox",
+                    },
+                    "instruction": "Type",
+                    "mlTask": "CLASSIFICATION",
+                },
+                "SUB_CLASSIFICATION": {
+                    "content": {
+                        "categories": {
+                            "A1": {"name": "Sub A1"},
+                        },
+                        "input": "radio",
+                    },
+                    "instruction": "Subtype",
+                    "mlTask": "CLASSIFICATION",
+                },
+            }
+        }
+
+        json_response = {
+            "CLASSIFICATION_JOB": {
+                "categories": [
+                    {
+                        "name": "A",
+                        "children": {"SUB_CLASSIFICATION": {"categories": [{"name": "A1"}]}},
+                    },
+                    {"name": "B"},
+                ]
+            }
+        }
+
+        result = kili_json_response_to_feature_collection(
+            json_response, json_interface, flatten_properties=True
+        )
+
+        assert result["type"] == "FeatureCollection"
+        assert len(result["features"]) == 1
+
+        properties = result["features"][0]["properties"]
+        assert properties["class"] == "Category A"
+        assert set(properties["Type"]) == {"Category A", "Category B"}
+        assert properties["Type.Category A.Subtype"] == "Sub A1"
+        assert "kili" in properties
+
     def test_round_trip_with_flattened_properties(self):
         """Test that features with flattened properties can be converted back to Kili format."""
         json_interface = {
