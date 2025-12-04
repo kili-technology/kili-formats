@@ -1776,6 +1776,76 @@ class TestPropertyFlattening:
         # Verify geometry is preserved (coordinates may be in different nesting levels)
         assert len(result_ann["boundingPoly"]) > 0
 
+    def test_flatten_properties_with_transcription_subjob(self):
+        """Test that transcription subjobs (children of annotations) are flattened."""
+        json_interface = {
+            "jobs": {
+                "OBJECT_DETECTION_JOB_0": {
+                    "mlTask": "OBJECT_DETECTION",
+                    "instruction": "Object Detection",
+                    "content": {
+                        "categories": {
+                            "LAND": {"name": "Land", "children": ["TRANSCRIPTION_JOB"]},
+                            "WATER": {"name": "Water", "children": []},
+                        },
+                        "input": "radio",
+                    },
+                },
+                "TRANSCRIPTION_JOB": {
+                    "mlTask": "TRANSCRIPTION",
+                    "instruction": "Description",
+                    "exportName": "Description",
+                    "content": {"input": "textField"},
+                },
+            }
+        }
+
+        kili_response = {
+            "OBJECT_DETECTION_JOB_0": {
+                "annotations": [
+                    {
+                        "categories": [{"name": "LAND"}],
+                        "children": {
+                            "TRANSCRIPTION_JOB": {"text": "This is a land parcel description"}
+                        },
+                        "mid": "annotation-1",
+                        "type": "polygon",
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {"x": 0.1, "y": 0.1},
+                                    {"x": 0.9, "y": 0.1},
+                                    {"x": 0.9, "y": 0.9},
+                                    {"x": 0.1, "y": 0.9},
+                                ]
+                            }
+                        ],
+                    }
+                ]
+            }
+        }
+
+        result = kili_json_response_to_feature_collection(
+            kili_response, json_interface, flatten_properties=True
+        )
+
+        assert len(result["features"]) == 1
+        feature = result["features"][0]
+
+        # Check that the transcription subjob appears in flattened properties
+        assert "Object Detection.Land.Description" in feature["properties"]
+        assert feature["properties"]["Object Detection.Land.Description"] == (
+            "This is a land parcel description"
+        )
+
+        # Check that the main category is still present
+        assert feature["properties"]["class"] == "Land"
+        assert feature["properties"]["Object Detection"] == "Land"
+
+        # Verify the kili object is preserved
+        assert "kili" in feature["properties"]
+        assert "TRANSCRIPTION_JOB" in feature["properties"]["kili"]["children"]
+
 
 class TestGeometryCollectionConversion:
     def test_geojson_geometrycollection_feature_to_kili_annotations(self):

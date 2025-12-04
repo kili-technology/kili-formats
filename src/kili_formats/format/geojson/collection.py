@@ -240,12 +240,45 @@ def _is_multi_select_job(json_interface: Optional[Dict[str, Any]], job_name: str
     return job["content"].get("input") == "checkbox"
 
 
+def _is_child_of_category(
+    json_interface: Optional[Dict[str, Any]],
+    parent_job_name: str,
+    category_name: str,
+    child_job_name: str,
+) -> bool:
+    """Check if a child job is defined as a child of a specific category in json_interface.
+
+    Args:
+        json_interface: The project's json interface
+        parent_job_name: The parent job identifier
+        category_name: The category name
+        child_job_name: The child job identifier to check
+
+    Returns:
+        True if the child job is listed in the category's children, False otherwise
+    """
+    if not json_interface or "jobs" not in json_interface:
+        return False
+
+    parent_job = json_interface["jobs"].get(parent_job_name)
+    if not parent_job or "content" not in parent_job:
+        return False
+
+    categories = parent_job["content"].get("categories", {})
+    category = categories.get(category_name)
+    if not category:
+        return False
+
+    children = category.get("children", [])
+    return child_job_name in children
+
+
 def _flatten_classification_tree(
     children_dict: Dict[str, Any],
     json_interface: Optional[Dict[str, Any]],
     prefix: str = "",
 ) -> Dict[str, Any]:
-    """Recursively flatten nested classification children into dot notation.
+    """Recursively flatten nested classification and transcription children into dot notation.
 
     Args:
         children_dict: The children dictionary from kili annotation
@@ -259,16 +292,21 @@ def _flatten_classification_tree(
 
     for child_job_name, child_data in children_dict.items():
         job_friendly_name = _get_job_friendly_name(json_interface, child_job_name)
-        is_multi_select = _is_multi_select_job(json_interface, child_job_name)
-
-        # Get categories for this child job
-        if "categories" not in child_data:
-            continue
-
-        categories = child_data["categories"]
 
         # Build the key with prefix
         key = f"{prefix}.{job_friendly_name}" if prefix else job_friendly_name
+
+        # Handle transcription subjobs (with text field)
+        if "text" in child_data:
+            flat_props[key] = child_data["text"]
+            continue
+
+        # Handle classification subjobs (with categories field)
+        if "categories" not in child_data:
+            continue
+
+        is_multi_select = _is_multi_select_job(json_interface, child_job_name)
+        categories = child_data["categories"]
 
         if is_multi_select:
             # Multi-select: create array of friendly names
@@ -367,10 +405,51 @@ def _flatten_properties_for_gis(
                 nested_props = _flatten_classification_tree(cat["children"], json_interface, prefix)
                 flattened.update(nested_props)
 
-    # Flatten children classifications (for non-classification features like semantic segmentation)
+    # Flatten children (subjobs like transcriptions or nested classifications)
     if "children" in kili_properties and kili_properties["children"]:
-        flat_children = _flatten_classification_tree(kili_properties["children"], json_interface)
-        flattened.update(flat_children)
+        # Determine if children belong to a category or are independent
+        children_with_prefix = {}
+        children_without_prefix = {}
+
+        if "categories" in kili_properties and kili_properties["categories"]:
+            # Check each child job to see if it belongs to the category
+            categories = kili_properties["categories"]
+            first_category_name = categories[0].get("name", "") if categories else ""
+
+            for child_job_name, child_data in kili_properties["children"].items():
+                # Check if this child is defined as a child of the first category
+                if _is_child_of_category(
+                    json_interface, job_name, first_category_name, child_job_name
+                ):
+                    children_with_prefix[child_job_name] = child_data
+                else:
+                    children_without_prefix[child_job_name] = child_data
+
+            # Process children that belong to the category (with prefix)
+            if children_with_prefix:
+                category_friendly_names = [
+                    _get_category_friendly_name(json_interface, job_name, cat.get("name", ""))
+                    for cat in categories
+                ]
+                if category_friendly_names:
+                    prefix = f"{job_friendly_name}.{category_friendly_names[0]}"
+                    flat_children = _flatten_classification_tree(
+                        children_with_prefix, json_interface, prefix
+                    )
+                    flattened.update(flat_children)
+
+            # Process independent children (without prefix)
+            if children_without_prefix:
+                flat_children = _flatten_classification_tree(
+                    children_without_prefix, json_interface
+                )
+                flattened.update(flat_children)
+        else:
+            # No categories, process all children without prefix
+            flat_children = _flatten_classification_tree(
+                kili_properties["children"], json_interface
+            )
+            flattened.update(flat_children)
 
     # Preserve original kili object
     flattened["kili"] = kili_properties
