@@ -5,7 +5,7 @@
 To install the development environment, please follow these steps, preferably in a Python 3.8 virtual environment.
 
 ```bash
-pip install .
+pip install -e ".[dev]"
 pre-commit install
 pre-commit run --all-files
 ```

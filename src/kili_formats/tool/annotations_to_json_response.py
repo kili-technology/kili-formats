@@ -19,6 +19,7 @@ from kili_formats.media.video import get_video_and_frame_dimensions
 from kili_formats.types import (
     ClassicAnnotation,
     ClassificationAnnotation,
+    ComparisonAnnotation,
     JobName,
     JobTool,
     ObjectDetectionAnnotation,
@@ -96,7 +97,13 @@ class AnnotationsToJsonResponseConverter:
 
         Modifies the input label.
         """
-        if self._project_input_type in {"VIDEO", "LLM_RLHF", "GEOSPATIAL"}:
+        if self._project_input_type in {
+            "GEOSPATIAL",
+            "LLM_INSTR_FOLLOWING",
+            "LLM_RLHF",
+            "LLM_STATIC",
+            "VIDEO",
+        }:
             if not annotations and self._label_has_json_response_data(label):
                 return
 
@@ -227,6 +234,12 @@ def _classic_annotations_to_json_response(
                 json_resp.setdefault(job_name, {}).setdefault("categories", []).extend(
                     job_resp["categories"]
                 )
+
+        elif ann["__typename"] == "ComparisonAnnotation":
+            ann = cast(ComparisonAnnotation, ann)
+            ann_json_resp = _comparison_annotation_to_json_response(ann)
+            for job_name, job_resp in ann_json_resp.items():
+                json_resp.setdefault(job_name, {}).setdefault("choice", job_resp["choice"])
 
         elif ann["__typename"] == "RankingAnnotation":
             ann = cast(RankingAnnotation, ann)
@@ -389,6 +402,19 @@ def _key_annotations_iterator(annotation: VideoAnnotation) -> Generator:
                 next_key_ann,
                 key_ann_frame,
             )
+
+
+def _comparison_annotation_to_json_response(
+    annotation: ComparisonAnnotation,
+) -> Dict[JobName, Dict]:
+    """Convert comparison annotation to a json response."""
+    json_resp = {
+        annotation["job"]: {
+            "choice": annotation["annotationValue"]["choice"],
+        }
+    }
+
+    return json_resp
 
 
 def _ranking_annotation_to_json_response(
