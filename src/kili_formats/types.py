@@ -159,6 +159,32 @@ class ClassificationAnnotation(TypedDict):
     annotationValue: ClassificationAnnotationValue
 
 
+class ComparisonValue(TypedDict):
+    """Comparison value."""
+
+    code: str
+    firstId: str
+    secondId: str
+
+
+class ComparisonAnnotationValue(TypedDict):
+    """Comparison annotation value."""
+
+    choice: ComparisonValue
+
+
+class ComparisonAnnotation(TypedDict):
+    """Comparison annotation."""
+
+    # pylint: disable=unused-private-member
+    __typename: Literal["ComparisonAnnotation"]
+    id: AnnotationId
+    labelId: LabelId
+    job: JobName
+    path: List[List[str]]
+    annotationValue: ComparisonAnnotationValue
+
+
 class RankingOrderValue(TypedDict):
     """Ranking order value."""
 
@@ -307,6 +333,7 @@ VideoAnnotation = Union[
 
 ClassicAnnotation = Union[
     ClassificationAnnotation,
+    ComparisonAnnotation,
     ObjectDetectionAnnotation,
     RankingAnnotation,
     TranscriptionAnnotation,
