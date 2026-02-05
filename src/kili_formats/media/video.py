@@ -69,20 +69,21 @@ def get_video_dimensions(asset: Dict) -> Tuple:
 def cut_video(
     video_path: Path, asset: Dict, leading_zeros: int, output_dir: Optional[Path]
 ) -> List[Path]:
-    """Download and cut video into frames."""
+    """Extract frames from video, matching import behavior for VFR videos."""
     if not ffmpeg_installed:
         raise ImportError("Install with `pip install kili-formats[video]` to use this feature.")
     output_dir = output_dir or video_path.parent
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    if (
-        "jsonMetadata" in asset
-        and "processingParameters" in asset["jsonMetadata"]
-        and "framesPlayedPerSecond" in asset["jsonMetadata"]["processingParameters"]
-    ):
-        metadata = asset["jsonMetadata"]
-        final_framerate = metadata["processingParameters"]["framesPlayedPerSecond"]
-    else:
+    should_keep_native_frame_rate = True
+    final_framerate = None
+
+    if "jsonMetadata" in asset and "processingParameters" in asset["jsonMetadata"]:
+        processing_params = asset["jsonMetadata"]["processingParameters"]
+        should_keep_native_frame_rate = processing_params.get("shouldKeepNativeFrameRate", True)
+        final_framerate = processing_params.get("framesPlayedPerSecond")
+
+    if final_framerate is None:
         try:
             probe = ffmpeg.probe(str(video_path))
             video_info = next(s for s in probe["streams"] if s["codec_type"] == "video")
@@ -97,12 +98,20 @@ def cut_video(
     output_frames = []
     try:
         with TemporaryDirectory() as temp_dir:
-            ffmpeg.input(str(video_path)).filter("fps", fps=final_framerate, round="up").output(
-                os.path.join(str(temp_dir), "%d.jpg"), start_number=0
-            ).run(capture_stdout=True, capture_stderr=True)
+            output_pattern = os.path.join(str(temp_dir), "%d.jpg")
+
+            if should_keep_native_frame_rate:
+                ffmpeg.input(str(video_path)).output(
+                    output_pattern, start_number=0, **{"qscale:v": 1, "vsync": "0", "an": None}
+                ).run(capture_stdout=True, capture_stderr=True)
+            else:
+                ffmpeg.input(str(video_path)).filter("fps", fps=final_framerate, round="up").output(
+                    output_pattern, start_number=0, **{"qscale:v": 1, "vsync": "1", "an": None}
+                ).run(capture_stdout=True, capture_stderr=True)
+
             for file in os.listdir(temp_dir):
                 idx = int(Path(file).stem)
-                new_filename = f"{asset['externalId']}_{str(idx + 1).zfill(leading_zeros)}.jpg"
+                new_filename = f"{asset['externalId']}_{str(idx).zfill(leading_zeros)}.jpg"
                 shutil.move(str(Path(temp_dir) / file), str(output_dir / new_filename))
                 output_frames.append(output_dir / new_filename)
     except ffmpeg.Error as error:
