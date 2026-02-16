@@ -19,6 +19,10 @@ def clean_json_response(asset: Dict):
         for label in asset["labels"]:
             if label.get("jsonResponse", {}) and "ROTATION_JOB" in label["jsonResponse"]:
                 label["jsonResponse"].pop("ROTATION_JOB")
+    if asset.get("latestLabels"):
+        for label in asset["latestLabels"]:
+            if label.get("jsonResponse", {}) and "ROTATION_JOB" in label["jsonResponse"]:
+                label["jsonResponse"].pop("ROTATION_JOB")
 
 
 def format_json_response(label):
@@ -37,6 +41,10 @@ def convert_to_pixel_coords(asset: Dict, project: ProjectDict, **kwargs) -> Dict
 
     if asset.get("labels"):
         for label in asset["labels"]:
+            _scale_label_vertices(label, asset, project, **kwargs)
+
+    if asset.get("latestLabels"):
+        for label in asset["latestLabels"]:
             _scale_label_vertices(label, asset, project, **kwargs)
 
     return asset
