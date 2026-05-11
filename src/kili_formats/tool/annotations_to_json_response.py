@@ -72,21 +72,6 @@ class AnnotationsToJsonResponseConverter:
         self._project_input_type = project_input_type
         self._project_json_interface = json_interface
 
-    def _label_has_json_response_data(self, label: Dict) -> bool:
-        if self._project_input_type == "VIDEO":
-            job_names_in_json_resp = {
-                job_name for frame_resp in label["jsonResponse"].values() for job_name in frame_resp
-            }
-        else:
-            job_names_in_json_resp = set(label["jsonResponse"].keys())
-
-        if any(
-            job_name in job_names_in_json_resp for job_name in self._project_json_interface["jobs"]
-        ):
-            return True
-
-        return False
-
     def patch_label_json_response(
         self,
         asset: Optional[Dict],
@@ -104,7 +89,7 @@ class AnnotationsToJsonResponseConverter:
             "LLM_STATIC",
             "VIDEO",
         }:
-            if not annotations and self._label_has_json_response_data(label):
+            if not annotations:
                 return
 
             if self._project_input_type == "VIDEO":
@@ -370,9 +355,11 @@ def _key_annotations_iterator(annotation: VideoAnnotation) -> Generator:
             key_ann_frame = key_ann["frame"]
             key_ann_end = min(
                 frame_interval["end"] + 1,
-                sorted_key_annotations[key_ann_index + 1]["frame"]
-                if key_ann_index + 1 < len(sorted_key_annotations)
-                else frame_interval["end"] + 1,
+                (
+                    sorted_key_annotations[key_ann_index + 1]["frame"]
+                    if key_ann_index + 1 < len(sorted_key_annotations)
+                    else frame_interval["end"] + 1
+                ),
             )
 
             # get the next key annotation, if it exists
