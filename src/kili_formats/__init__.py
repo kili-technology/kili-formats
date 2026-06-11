@@ -9,7 +9,7 @@ from .format.llm import (
 )
 from .format.voc import convert_from_kili_to_voc_format
 from .format.yolo import convert_from_kili_to_yolo_format
-from .kili import clean_json_response, convert_to_pixel_coords, format_json_response
+from .kili import clean_json_response, convert_to_pixel_coords
 
 __all__ = [
     "clean_json_response",
@@ -20,5 +20,4 @@ __all__ = [
     "convert_from_kili_to_voc_format",
     "convert_from_kili_to_yolo_format",
     "convert_to_pixel_coords",
-    "format_json_response",
 ]

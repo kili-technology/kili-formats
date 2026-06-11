@@ -25,15 +25,6 @@ def clean_json_response(asset: Dict):
                 label["jsonResponse"].pop("ROTATION_JOB")
 
 
-def format_json_response(label):
-    """Format the label JSON response in the requested format."""
-    keys = list(label["jsonResponse"].keys())
-
-    for key in keys:
-        if key.isdigit():
-            label["jsonResponse"][int(key)] = label["jsonResponse"].pop(key)
-
-
 def convert_to_pixel_coords(asset: Dict, project: ProjectDict, **kwargs) -> Dict:
     """Convert asset JSON response normalized vertices to pixel coordinates."""
     if asset.get("latestLabel", {}):
