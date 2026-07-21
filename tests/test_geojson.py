@@ -964,6 +964,109 @@ class TestConvertFromKiliToGeojsonFormat:
         assert result["features"][0]["geometry"]["type"] == "Point"
         assert result["features"][0]["properties"]["kili"]["job"] == "POINT_JOB"
 
+    def test_convert_from_kili_to_geojson_format_attaches_additional_kili_properties(self):
+        json_response = {
+            "POINT_JOB": {
+                "annotations": [
+                    {
+                        "categories": [{"name": "A"}],
+                        "point": {"x": 1.0, "y": 2.0},
+                        "mid": "point_1",
+                        "type": "marker",
+                    }
+                ]
+            },
+            "BBOX_JOB": {
+                "annotations": [
+                    {
+                        "categories": [{"name": "car"}],
+                        "boundingPoly": [
+                            {
+                                "normalizedVertices": [
+                                    {"x": 0.0, "y": 0.0},
+                                    {"x": 0.0, "y": 1.0},
+                                    {"x": 1.0, "y": 1.0},
+                                    {"x": 1.0, "y": 0.0},
+                                ]
+                            }
+                        ],
+                        "mid": "bbox_1",
+                        "type": "rectangle",
+                    }
+                ]
+            },
+        }
+        additional_kili_properties = {
+            "assetId": "asset_id_1",
+            "author": "jane@kili-technology.com",
+            "exportDate": "2026-07-21T10:00:00.000Z",
+            "geospatialExportMetadata": [
+                {"layerName": "RGB", "crs": "EPSG:32634"},
+                {"layerName": "DSM", "crs": "EPSG:4326"},
+            ],
+        }
+
+        result = convert_from_kili_to_geojson_format(
+            json_response, additional_kili_properties=additional_kili_properties
+        )
+
+        assert len(result["features"]) == 2
+        # Merged into every feature so it survives strict GeoJSON tooling, without
+        # clobbering the annotation's own kili data.
+        for feature in result["features"]:
+            kili = feature["properties"]["kili"]
+            assert kili["assetId"] == "asset_id_1"
+            assert kili["author"] == "jane@kili-technology.com"
+            assert kili["exportDate"] == "2026-07-21T10:00:00.000Z"
+            assert kili["geospatialExportMetadata"] == (
+                additional_kili_properties["geospatialExportMetadata"]
+            )
+            assert "job" in kili  # original annotation data preserved
+        # Not attached as non-standard top-level FeatureCollection members.
+        for key in additional_kili_properties:
+            assert key not in result
+
+    def test_convert_from_kili_to_geojson_format_attaches_properties_when_flattened(self):
+        json_response = {
+            "POINT_JOB": {
+                "annotations": [
+                    {
+                        "categories": [{"name": "A"}],
+                        "point": {"x": 1.0, "y": 2.0},
+                        "mid": "point_1",
+                        "type": "marker",
+                    }
+                ]
+            }
+        }
+        additional_kili_properties = {"assetId": "asset_id_1"}
+
+        result = convert_from_kili_to_geojson_format(
+            json_response,
+            flatten_properties=True,
+            additional_kili_properties=additional_kili_properties,
+        )
+
+        assert result["features"][0]["properties"]["kili"]["assetId"] == "asset_id_1"
+
+    def test_convert_from_kili_to_geojson_format_without_properties_does_not_attach(self):
+        json_response = {
+            "POINT_JOB": {
+                "annotations": [
+                    {
+                        "categories": [{"name": "A"}],
+                        "point": {"x": 1.0, "y": 2.0},
+                        "mid": "point_1",
+                        "type": "marker",
+                    }
+                ]
+            }
+        }
+
+        result = convert_from_kili_to_geojson_format(json_response)
+
+        assert "assetId" not in result["features"][0]["properties"]["kili"]
+
 
 class TestComplexScenarios:
     def test_complete_workflow_point_annotations(self):

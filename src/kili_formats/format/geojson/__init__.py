@@ -39,6 +39,7 @@ def convert_from_kili_to_geojson_format(
     response: Dict[str, Any],
     json_interface: Optional[Dict[str, Any]] = None,
     flatten_properties: bool = False,
+    additional_kili_properties: Optional[Dict[str, Any]] = None,
 ):
     """Convert Kili json response to GeoJSON format.
 
@@ -46,11 +47,18 @@ def convert_from_kili_to_geojson_format(
         response: Kili label json response
         json_interface: Optional json interface for friendly property names
         flatten_properties: If True, flatten properties for GIS-friendly format
+        additional_kili_properties: Optional export-level metadata (e.g. assetId, author,
+            exportDate, geospatialExportMetadata) to merge into the `kili` object of every
+            feature's properties. Storing it under each feature (rather than as a top-level
+            FeatureCollection member) keeps it spec-compliant so tools that strictly follow
+            the GeoJSON spec do not drop it.
 
     Returns:
         GeoJSON feature collection
     """
-    return kili_json_response_to_feature_collection(response, json_interface, flatten_properties)
+    return kili_json_response_to_feature_collection(
+        response, json_interface, flatten_properties, additional_kili_properties
+    )
 
 
 __all__ = [

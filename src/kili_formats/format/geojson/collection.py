@@ -461,6 +461,7 @@ def kili_json_response_to_feature_collection(
     json_response: Dict[str, Any],
     json_interface: Optional[Dict[str, Any]] = None,
     flatten_properties: bool = False,
+    additional_kili_properties: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Convert a Kili label json response to a Geojson feature collection.
 
@@ -468,6 +469,8 @@ def kili_json_response_to_feature_collection(
         json_response: a Kili label json response.
         json_interface: Optional json interface for friendly property names.
         flatten_properties: If True, flatten properties for GIS-friendly format.
+        additional_kili_properties: Optional export-level metadata to merge into the
+            `kili` object of every feature's properties.
 
     Returns:
         A Geojson feature collection.
@@ -629,7 +632,28 @@ def kili_json_response_to_feature_collection(
             f"Annotation tools {ann_tools_not_supported} are not supported and will be skipped.",
             stacklevel=2,
         )
+
+    if additional_kili_properties:
+        _attach_additional_kili_properties(features, additional_kili_properties)
+
     return features_to_feature_collection(features)
+
+
+def _attach_additional_kili_properties(
+    features: Sequence[Dict[str, Any]],
+    additional_kili_properties: Dict[str, Any],
+) -> None:
+    """Merge export-level metadata into the `kili` object of every feature.
+
+    Export-level metadata (e.g. assetId, author, exportDate, geospatialExportMetadata)
+    is stored under `properties.kili` of each feature so that it survives tools that
+    strictly follow the GeoJSON spec and drop non-standard members (a top-level
+    FeatureCollection member or a FeatureCollection `properties` object would not).
+    """
+    for feature in features:
+        properties = feature.setdefault("properties", {})
+        kili = properties.setdefault("kili", {})
+        kili.update(additional_kili_properties)
 
 
 def geojson_feature_collection_to_kili_json_response(
