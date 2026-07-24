@@ -1,6 +1,3 @@
-from pathlib import Path
-from tempfile import TemporaryDirectory
-
 import pytest
 
 from kili_formats.exceptions import NotCompatibleOptions
@@ -9,7 +6,6 @@ from src.kili_formats.tool.annotations_to_json_response import (
     AnnotationsToJsonResponseConverter,
 )
 
-from .fakes.geo import test_cases_full as test_cases_full_geo
 from .fakes.image import (
     image_asset,
     image_asset_rotated,
@@ -25,13 +21,7 @@ from .fakes.pdf import (
     pdf_project_asset_unnormalized,
 )
 from .fakes.text import text_asset, text_project, text_project_asset_unnormalized
-from .fakes.video import (
-    test_cases,
-    test_cases_full,
-    video_asset,
-    video_project,
-    video_project_asset_unnormalized,
-)
+from .fakes.video import video_asset, video_project, video_project_asset_unnormalized
 
 
 def test_kili_convert_to_pixel_coords_pdf():
@@ -78,116 +68,68 @@ def test_kili_convert_to_pixel_coords_image_rotated():
     assert scaled_asset == image_rotated_project_asset_unnormalized
 
 
-@pytest.mark.parametrize(
-    "json_interface, latest_label_annotations, expected_latest_label_result", test_cases
-)
-def test_video_object_detection_annotation_to_json_response(
-    json_interface, latest_label_annotations, expected_latest_label_result
-):
-    """Test the conversion from annotations to jsonResponse."""
-    with TemporaryDirectory() as tmp_dir:
-        video_path = tmp_dir / Path("video1.mp4")
-        video_path.write_bytes(b"fake video content")
-        asset = {
-            "id": "fake_asset_id",
-            "resolution": {"width": 1920, "height": 1080},
-            "content": str(video_path),
-            "jsonContent": "",
+def test_patch_label_json_response_llm_classic_annotations():
+    """Test rebuilding the jsonResponse from annotations for LLM projects.
+
+    LLM projects are the only ones that still rebuild their jsonResponse
+    client-side (classification, transcription, comparison, ranking and their
+    child jobs). Every other project type is served via jsonResponseUrl.
+    """
+    json_interface = {
+        "jobs": {
+            "CLASS_JOB": {"mlTask": "CLASSIFICATION"},
+            "CHILD_TRANSCRIPTION": {"mlTask": "TRANSCRIPTION"},
+            "TRANSCRIPTION_JOB": {"mlTask": "TRANSCRIPTION"},
         }
-
-        converter = AnnotationsToJsonResponseConverter(
-            json_interface=json_interface,
-            project_input_type="VIDEO",
-        )
-        converter.patch_label_json_response(
-            asset, latest_label_annotations, latest_label_annotations["annotations"]
-        )
-        jobs = json_interface["jobs"].keys()
-        job = next(iter(jobs))
-
-        assert latest_label_annotations["labelType"] == expected_latest_label_result["labelType"]
-        assert latest_label_annotations["author"] == expected_latest_label_result["author"]
-        if "0" in latest_label_annotations.get("jsonResponse", {}):
-            assert latest_label_annotations["jsonResponse"]["0"][job]["annotations"][0][
-                "boundingPoly"
-            ][0]["normalizedVertices"] == pytest.approx(
-                expected_latest_label_result["jsonResponse"]["0"][job]["annotations"][0][
-                    "boundingPoly"
-                ][0]["normalizedVertices"],
-                rel=1e-2,
-            )
-        if "assetLevel" in latest_label_annotations.get("jsonResponse", {}):
-            for annotation in latest_label_annotations["annotations"]:
-                job = annotation["job"]
-                annotation_value = annotation["annotationValue"]
-                if "text" in annotation_value:
-                    assert (
-                        annotation_value["text"]
-                        == expected_latest_label_result["jsonResponse"][job]["text"]
-                    )
-                if "categories" in annotation_value:
-                    assert (
-                        annotation_value["categories"][0]
-                        == expected_latest_label_result["jsonResponse"][job]["category"][0]["name"]
-                    )
-
-
-@pytest.mark.parametrize(
-    "json_interface, latest_label_annotations, expected_latest_label_result", test_cases_full
-)
-def test_full_annotation_to_json_response_video(
-    json_interface, latest_label_annotations, expected_latest_label_result
-):
-    """Test the conversion from annotations to jsonResponse."""
-    with TemporaryDirectory() as tmp_dir:
-        video_path = tmp_dir / Path("video1.mp4")
-        video_path.write_bytes(b"fake video content")
-        asset = {
-            "id": "fake_asset_id",
-            "resolution": {"width": 1920, "height": 1080},
-            "content": str(video_path),
-            "jsonContent": "",
-        }
-
-        converter = AnnotationsToJsonResponseConverter(
-            json_interface=json_interface,
-            project_input_type="VIDEO",
-        )
-        converter.patch_label_json_response(
-            asset, latest_label_annotations, latest_label_annotations["annotations"]
-        )
-
-        assert latest_label_annotations["labelType"] == expected_latest_label_result["labelType"]
-        assert latest_label_annotations["author"] == expected_latest_label_result["author"]
-
-        assert (
-            latest_label_annotations["jsonResponse"] == expected_latest_label_result["jsonResponse"]
-        )
-
-
-@pytest.mark.parametrize(
-    "json_interface, latest_label_annotations, expected_latest_label_result", test_cases_full_geo
-)
-def test_full_annotation_to_json_response_geo(
-    json_interface, latest_label_annotations, expected_latest_label_result
-):
-    """Test the conversion from annotations to jsonResponse."""
-    asset = {
-        "id": "fake_asset_id",
-        "resolution": {"width": 1920, "height": 1080},
-        "content": "",
-        "jsonContent": "",
     }
+    annotations = [
+        {
+            "__typename": "ClassificationAnnotation",
+            "job": "CLASS_JOB",
+            "path": [],
+            "id": "parent",
+            "annotationValue": {"categories": ["A"]},
+        },
+        {
+            "__typename": "TranscriptionAnnotation",
+            "job": "CHILD_TRANSCRIPTION",
+            "path": [["parent", "A"]],
+            "id": "child",
+            "annotationValue": {"text": "child text"},
+        },
+        {
+            "__typename": "TranscriptionAnnotation",
+            "job": "TRANSCRIPTION_JOB",
+            "path": [],
+            "id": "flat",
+            "annotationValue": {"text": "hello"},
+        },
+    ]
+    label = {"jsonResponse": {}}
 
     converter = AnnotationsToJsonResponseConverter(
         json_interface=json_interface,
-        project_input_type="GEOSPATIAL",
+        project_input_type="LLM_STATIC",
     )
-    converter.patch_label_json_response(
-        asset, latest_label_annotations, latest_label_annotations["annotations"]
+    converter.patch_label_json_response(None, label, annotations)
+
+    assert label["jsonResponse"] == {
+        "CLASS_JOB": {
+            "categories": [
+                {"name": "A", "children": {"CHILD_TRANSCRIPTION": {"text": "child text"}}}
+            ]
+        },
+        "TRANSCRIPTION_JOB": {"text": "hello"},
+    }
+
+
+def test_patch_label_json_response_non_llm_is_noop():
+    """Non-LLM projects are served via jsonResponseUrl, so no client-side rebuild happens."""
+    label = {"jsonResponse": {"EXISTING_JOB": {"text": "kept"}}}
+    converter = AnnotationsToJsonResponseConverter(
+        json_interface={"jobs": {"SOME_JOB": {}}},
+        project_input_type="VIDEO",
     )
+    converter.patch_label_json_response(None, label, [])
 
-    assert latest_label_annotations["labelType"] == expected_latest_label_result["labelType"]
-    assert latest_label_annotations["author"] == expected_latest_label_result["author"]
-
-    assert latest_label_annotations["jsonResponse"] == expected_latest_label_result["jsonResponse"]
+    assert label["jsonResponse"] == {"EXISTING_JOB": {"text": "kept"}}
