@@ -22,7 +22,7 @@ def convert_from_kili_to_yolo_format(
             part and bounding box (its four corners); a part's holes are joined to its outline by
             a zero-width bridge, so a filled outline leaves them empty, and a shape of fewer than
             3 points is left out. `None`, the default: bounding boxes as detect lines and polygons
-            as segment lines, together, as before this option.
+            as segment lines, in the same list.
 
     Returns:
         The class index followed by the normalized coordinates, for each line.
@@ -100,17 +100,21 @@ def _signed_area(ring: List[Point]) -> float:
 
 
 def _bridge_hole(ring: List[Point], hole: List[Point]) -> List[Point]:
-    """One ring that walks `ring`, crosses to `hole` at their closest vertices, walks the hole the
-    other way round and comes back: the bridge has no width, and filling the result leaves the
-    hole empty, whichever fill rule is used.
+    """One ring that walks `ring`, crosses to `hole`, walks the hole the other way round and comes
+    back: the bridge has no width, and filling the result leaves the hole empty, whichever fill
+    rule is used.
+
+    The bridge's two edges cancel out wherever it runs, so its ends only keep it short: the hole's
+    leftmost vertex and the ring's vertex closest to it, in linear time — a mask's outline can hold
+    thousands of vertices.
     """
     if len(hole) < 3:
         return ring
     if (_signed_area(ring) > 0) == (_signed_area(hole) > 0):
         hole = hole[::-1]
-    i, j = min(
-        ((i, j) for i in range(len(ring)) for j in range(len(hole))),
-        key=lambda pair: (ring[pair[0]][0] - hole[pair[1]][0]) ** 2
-        + (ring[pair[0]][1] - hole[pair[1]][1]) ** 2,
+    j = min(range(len(hole)), key=lambda k: hole[k])
+    i = min(
+        range(len(ring)),
+        key=lambda k: (ring[k][0] - hole[j][0]) ** 2 + (ring[k][1] - hole[j][1]) ** 2,
     )
     return ring[: i + 1] + hole[j:] + hole[:j] + [hole[j], ring[i]] + ring[i + 1 :]
