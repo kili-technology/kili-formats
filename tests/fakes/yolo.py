@@ -188,6 +188,13 @@ yolo_mask_with_hole = yolo_annotation(
     [(0.1, 0.5), (0.5, 0.5), (0.5, 0.9), (0.1, 0.9)],
     [(0.2, 0.6), (0.4, 0.6), (0.4, 0.8), (0.2, 0.8)],
 )
+# A mask part with two holes, the second one's leftmost vertex nearer the first hole than the outline.
+yolo_mask_with_two_holes = yolo_annotation(
+    "semantic",
+    [(0.1, 0.1), (0.9, 0.1), (0.9, 0.9), (0.1, 0.9)],
+    [(0.2, 0.2), (0.4, 0.2), (0.4, 0.4), (0.2, 0.4)],
+    [(0.45, 0.45), (0.8, 0.45), (0.8, 0.8), (0.45, 0.8)],
+)
 # A mask in two parts: the backend stores one annotation per part, sharing the mid.
 yolo_mask_part_1 = yolo_annotation(
     "semantic", [(0.6, 0.6), (0.8, 0.6), (0.8, 0.8)], mid="mid-two-parts"

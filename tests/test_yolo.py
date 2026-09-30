@@ -16,6 +16,7 @@ from .fakes.yolo import (
     yolo_mask_part_1,
     yolo_mask_part_2,
     yolo_mask_with_hole,
+    yolo_mask_with_two_holes,
     yolo_segment,
     yolo_triangle,
 )
@@ -126,6 +127,19 @@ def test_convert_from_kili_to_yolo_format_for_segment_keeps_a_hole_empty():
     assert len(polygon) == 10
     assert _inside((0.15, 0.7), polygon)
     assert not _inside((0.3, 0.7), polygon)
+
+
+def test_convert_from_kili_to_yolo_format_for_segment_keeps_every_hole_empty():
+    label = yolo_label(yolo_mask_with_two_holes)
+
+    [line] = convert_from_kili_to_yolo_format("JOB_0", label, category_ids, task="segment")
+
+    polygon = _points(line)
+    assert len(polygon) == 4 + 2 * (4 + 2)
+    assert _inside((0.15, 0.85), polygon)
+    assert _inside((0.85, 0.15), polygon)
+    assert not _inside((0.3, 0.3), polygon)
+    assert not _inside((0.6, 0.6), polygon)
 
 
 def test_convert_from_kili_to_yolo_format_for_segment_writes_a_line_per_mask_part():
