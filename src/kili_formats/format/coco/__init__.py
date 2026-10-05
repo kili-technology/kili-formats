@@ -239,6 +239,8 @@ def _get_images_and_annotation_for_videos(
     coco_images = []
     coco_annotations = []
     annotation_offset = 0
+    # Every frame of every video is an image of its own, numbered across the videos
+    image_id = len(assets)
 
     for asset in assets:
         nbr_frames = len(asset.get("latestLabel", {}).get("jsonResponse", {}))
@@ -260,12 +262,10 @@ def _get_images_and_annotation_for_videos(
         else:
             raise FileNotFoundError(f"Could not find frames or video for asset {asset}")
 
-        for frame_i, (frame_id, json_response) in enumerate(
-            asset["latestLabel"]["jsonResponse"].items()
-        ):
+        for frame_id, json_response in asset["latestLabel"]["jsonResponse"].items():
             frame_name = f"{asset['externalId']}_{str(int(frame_id) + 1).zfill(leading_zeros)}"
             coco_image = CocoImage(
-                id=frame_i + len(assets),  # add offset to avoid duplicate ids
+                id=image_id,
                 license=0,
                 file_name=str(DATA_SUBDIR + "/" + f"{frame_name}{frame_ext}"),
                 height=height,
@@ -273,6 +273,7 @@ def _get_images_and_annotation_for_videos(
                 date_captured=None,
             )
             coco_images.append(coco_image)
+            image_id += 1
             if is_single_job:
                 job_name = next(iter(jobs.keys()))
                 if job_name not in json_response:
@@ -289,7 +290,7 @@ def _get_images_and_annotation_for_videos(
                 coco_annotations.extend(coco_img_annotations)
             else:
                 for job_name in jobs:
-                    if job_name not in asset["latestLabel"]["jsonResponse"]:
+                    if job_name not in json_response:
                         continue
                     coco_img_annotations, annotation_offset = _get_coco_image_annotations(
                         json_response[job_name]["annotations"],
@@ -319,10 +320,10 @@ def _get_coco_image_annotations(
     for annotation in annotations_:  # we do not use enumerate as some annotations may be empty
         annotation_j += 1
 
-        if not annotation:
-            print("continue")
+        # A point, a line or a pose has no bounding polygon: nothing COCO can write
+        bounding_poly = (annotation or {}).get("boundingPoly") or [{}]
+        if "normalizedVertices" not in bounding_poly[0]:
             continue
-        bounding_poly = annotation["boundingPoly"]
         area, bbox, polygons = _get_coco_geometry_from_kili_bpoly(
             bounding_poly, coco_image["width"], coco_image["height"], rotation
         )
