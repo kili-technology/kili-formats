@@ -62,7 +62,11 @@ def _parse_annotations(
         if "annotations" in job_response:
             annotations = job_response["annotations"]
             for annotation in annotations:
-                vertices = annotation["boundingPoly"][0]["normalizedVertices"]
+                # A point, a line or a pose has no bounding polygon, so no box to write
+                bounding_poly = annotation.get("boundingPoly") or [{}]
+                if "normalizedVertices" not in bounding_poly[0]:
+                    continue
+                vertices = bounding_poly[0]["normalizedVertices"]
                 categories = annotation["categories"]
                 for category in categories:
                     annotation_category = ET.SubElement(xml_label, "object")
