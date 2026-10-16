@@ -3,6 +3,7 @@ from typing import Dict, Optional, Sequence
 from xml.dom import minidom
 
 from kili_formats.tool.base import reverse_rotation_vertices
+from kili_formats.types import JobTool
 
 
 def convert_from_kili_to_voc_format(
@@ -62,6 +63,9 @@ def _parse_annotations(
         if "annotations" in job_response:
             annotations = job_response["annotations"]
             for annotation in annotations:
+                # Pascal VOC holds rectangles only: any other shape is left out
+                if annotation.get("type") != JobTool.RECTANGLE:
+                    continue
                 vertices = annotation["boundingPoly"][0]["normalizedVertices"]
                 categories = annotation["categories"]
                 for category in categories:
@@ -79,14 +83,15 @@ def _parse_annotations(
                     occluded = ET.SubElement(annotation_category, "occluded")
                     occluded.text = "0"
                     bndbox = ET.SubElement(annotation_category, "bndbox")
+                    # Kept inside the image
                     vertices_before_rotate = reverse_rotation_vertices(vertices, rotation_val)
                     x_vertices = [v["x"] * width for v in vertices_before_rotate]
                     y_vertices = [v["y"] * height for v in vertices_before_rotate]
                     xmin = ET.SubElement(bndbox, "xmin")
-                    xmin.text = str(round(min(x_vertices)))
+                    xmin.text = str(min(max(round(min(x_vertices)), 0), width))
                     xmax = ET.SubElement(bndbox, "xmax")
-                    xmax.text = str(round(max(x_vertices)))
+                    xmax.text = str(min(max(round(max(x_vertices)), 0), width))
                     ymin = ET.SubElement(bndbox, "ymin")
-                    ymin.text = str(round(min(y_vertices)))
+                    ymin.text = str(min(max(round(min(y_vertices)), 0), height))
                     ymax = ET.SubElement(bndbox, "ymax")
-                    ymax.text = str(round(max(y_vertices)))
+                    ymax.text = str(min(max(round(max(y_vertices)), 0), height))
