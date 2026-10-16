@@ -18,6 +18,9 @@ InputType = Literal[
     "GEOSPATIAL", "IMAGE", "LLM_INSTR_FOLLOWING", "LLM_RLHF", "LLM_STATIC", "PDF", "TEXT", "VIDEO"
 ]
 MLTask = Literal["CLASSIFICATION", "NAMED_ENTITIES_RECOGNITION", "OBJECT_DETECTION"]
+# The Ultralytics task a YOLO export is written for: "detect" (boxes), "obb" (oriented boxes) or
+# "segment" (polygons).
+YoloTask = Literal["detect", "obb", "segment"]
 
 AnnotationId = NewType("AnnotationId", str)
 AnnotationValueId = NewType("AnnotationValueId", str)
