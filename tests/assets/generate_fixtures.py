@@ -21,6 +21,9 @@ JPEG_SIZE = (97, 61)
 PNG_SIZE = (83, 47)
 TIFF_SIZE = (71, 53)
 
+# ICO holds several images; the largest is the one reported.
+ICO_SIZES = [(16, 16), (32, 32), (48, 48)]
+
 # The duplicate-tag TIFF carries ImageWidth/ImageLength twice.
 DUP_FIRST = (41, 29)
 DUP_SECOND = (97, 61)
@@ -87,6 +90,7 @@ def main():
     _gradient(JPEG_SIZE).save(HERE / "smoke.jpg", format="JPEG", quality=85)
     _gradient(PNG_SIZE).save(HERE / "smoke.png", format="PNG")
     _gradient(TIFF_SIZE).save(HERE / "smoke.tiff", format="TIFF")
+    _gradient((64, 64)).save(HERE / "smoke.ico", format="ICO", sizes=ICO_SIZES)
     _write_duplicate_tag_tiff(HERE / "smoke_duplicate_tags.tiff")
     print("fixtures written to", HERE)
 

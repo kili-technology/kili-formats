@@ -23,3 +23,7 @@ class NotExportableAssetError(ValueError):
 
 class GeoJsonConversionError(Exception):
     """Exception thrown when the an annotation cannot be converted to GeoJson."""
+
+
+class UnidentifiedImageError(Exception):
+    """Exception thrown when a file cannot be recognised as an image."""
