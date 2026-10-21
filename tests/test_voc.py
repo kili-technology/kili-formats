@@ -44,3 +44,63 @@ def test_voc_convert_from_kili_to_voc_format():
         encoding="utf-8"
     )
     assert xmlstr == expected_annotation
+
+
+def test_voc_writes_the_bounding_boxes_only():
+    """Pascal VOC holds rectangles only: a polygon, a semantic segmentation, a point or a line is
+    left out, in its own job or beside the boxes."""
+    box = {
+        "categories": [{"confidence": 100, "name": "OBJECT_A"}],
+        "boundingPoly": [
+            {
+                "normalizedVertices": [
+                    {"x": 0.16504140348233334, "y": 0.7986938935103378},
+                    {"x": 0.16504140348233334, "y": 0.2605618833516984},
+                    {"x": 0.8377886490672706, "y": 0.2605618833516984},
+                    {"x": 0.8377886490672706, "y": 0.7986938935103378},
+                ]
+            }
+        ],
+        "type": "rectangle",
+    }
+    polygon = {
+        "categories": [{"name": "OBJECT_B"}],
+        "boundingPoly": [
+            {
+                "normalizedVertices": [
+                    {"x": 0.1, "y": 0.1},
+                    {"x": 0.3, "y": 0.1},
+                    {"x": 0.2, "y": 0.3},
+                ]
+            }
+        ],
+        "type": "polygon",
+    }
+    semantic = {**polygon, "categories": [{"name": "OBJECT_C"}], "mid": "part", "type": "semantic"}
+    response = {
+        "JOB_0": {"annotations": [polygon, box, semantic]},
+        "POLYGON_JOB": {"annotations": [polygon]},
+        "SEMANTIC_JOB": {"annotations": [semantic]},
+        "POINT_JOB": {
+            "annotations": [
+                {"categories": [{"name": "TIP"}], "point": {"x": 0.5, "y": 0.5}, "type": "marker"}
+            ]
+        },
+        "LINE_JOB": {
+            "annotations": [
+                {
+                    "categories": [{"name": "EDGE"}],
+                    "polyline": [{"x": 0.1, "y": 0.1}, {"x": 0.2, "y": 0.2}],
+                    "type": "polyline",
+                }
+            ]
+        },
+    }
+
+    xmlstr = convert_from_kili_to_voc_format(
+        response, 1920, 1080, {"filename": "filename.xml"}, None
+    )
+
+    assert xmlstr == Path("./tests/expected/object_A_with_0_rotation.xml").read_text(
+        encoding="utf-8"
+    )
