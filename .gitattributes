@@ -1,0 +1,4 @@
+# Image fixtures are compared byte for byte; never let a checkout rewrite them.
+tests/assets/*.jpg binary
+tests/assets/*.png binary
+tests/assets/*.tiff binary
