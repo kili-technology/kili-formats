@@ -43,7 +43,7 @@ dev = [
 coco = [
   "numpy >= 2, < 3",
   # the image size of an asset with no stored resolution is read from its file
-  "Pillow >=9.0.0, <13.0.0",
+  "imagesize >= 1.4, < 3",
   "shapely >= 1.8, < 3"
 ]
 image = [
