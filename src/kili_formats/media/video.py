@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Tuple
 
 from kili_formats.exceptions import NotExportableAssetError
 from kili_formats.media.image import get_frame_dimensions
+from kili_formats.tool.naming import frame_name, safe_path
 
 if TYPE_CHECKING:
     import ffmpeg
@@ -69,7 +70,12 @@ def get_video_dimensions(asset: Dict) -> Tuple:
 def cut_video(
     video_path: Path, asset: Dict, leading_zeros: int, output_dir: Optional[Path]
 ) -> List[Path]:
-    """Extract frames from video, matching import behavior for VFR videos."""
+    """Extract frames from video, matching import behavior for VFR videos.
+
+    The frames are returned in order, named `<externalId>_<n>`: padded to `leading_zeros`, or to
+    the width of the number of frames when it is 0, as `frame_name` names them. An external
+    id holding a slash puts them in a subfolder of `output_dir`, one that stays inside it.
+    """
     if not ffmpeg_installed:
         raise ImportError("Install with `pip install kili-formats[video]` to use this feature.")
     output_dir = output_dir or video_path.parent
@@ -100,21 +106,46 @@ def cut_video(
         with TemporaryDirectory() as temp_dir:
             output_pattern = os.path.join(str(temp_dir), "%d.jpg")
 
-            if should_keep_native_frame_rate:
-                ffmpeg.input(str(video_path)).output(
-                    output_pattern, start_number=0, **{"qscale:v": 1, "vsync": "0", "an": None}
-                ).run(capture_stdout=True, capture_stderr=True)
-            else:
-                ffmpeg.input(str(video_path)).filter("fps", fps=final_framerate, round="up").output(
-                    output_pattern, start_number=0, **{"qscale:v": 1, "vsync": "1", "an": None}
-                ).run(capture_stdout=True, capture_stderr=True)
+            stream = ffmpeg.input(str(video_path))
+            if not should_keep_native_frame_rate:
+                stream = stream.filter("fps", fps=final_framerate, round="up")
+            _extract_frames(stream, output_pattern, keep_timestamps=should_keep_native_frame_rate)
 
-            for file in os.listdir(temp_dir):
-                idx = int(Path(file).stem)
-                new_filename = f"{asset['externalId']}_{str(idx + 1).zfill(leading_zeros)}.jpg"
-                shutil.move(str(Path(temp_dir) / file), str(output_dir / new_filename))
+            # In frame order: by index, not by name, where "10" sorts before "2"
+            indexes = sorted(int(Path(file).stem) for file in os.listdir(temp_dir))
+            for idx in indexes:
+                if leading_zeros > 0:
+                    new_filename = (
+                        f"{safe_path(asset['externalId'])}_{str(idx + 1).zfill(leading_zeros)}.jpg"
+                    )
+                else:
+                    new_filename = f"{frame_name(asset['externalId'], idx, len(indexes))}.jpg"
+                (output_dir / new_filename).parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(Path(temp_dir) / f"{idx}.jpg"), str(output_dir / new_filename))
                 output_frames.append(output_dir / new_filename)
     except ffmpeg.Error as error:
         raise FFmpegError(f"ffmpeg error for asset {video_path.name}: {error}") from error
 
-    return sorted(output_frames)
+    return output_frames
+
+
+def _extract_frames(stream, output_pattern: str, keep_timestamps: bool) -> None:
+    """Write the stream's frames: each as decoded, or at a constant rate.
+
+    ffmpeg 5.1 replaced -vsync with -fps_mode, and recent ones refuse -vsync: an older one, which
+    knows -vsync alone, is asked again with it.
+    """
+    try:
+        stream.output(
+            output_pattern,
+            start_number=0,
+            **{"qscale:v": 1, "fps_mode": "passthrough" if keep_timestamps else "cfr", "an": None},
+        ).run(capture_stdout=True, capture_stderr=True)
+    except ffmpeg.Error as error:
+        if b"fps_mode" not in (error.stderr or b""):
+            raise
+        stream.output(
+            output_pattern,
+            start_number=0,
+            **{"qscale:v": 1, "vsync": "0" if keep_timestamps else "1", "an": None},
+        ).run(capture_stdout=True, capture_stderr=True)

@@ -1,11 +1,13 @@
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Sequence
 
 import pytest
 import requests
 from PIL import Image
 
+from kili_formats.format import coco
 from kili_formats.format.coco import (
     _get_coco_categories_with_mapping,
     _get_coco_geometry_from_kili_bpoly,
@@ -735,3 +737,230 @@ def test_coco_export_with_multi_jobs():
         assert (
             categories_by_id[labels_json["annotations"][1]["category_id"]] == "MAIN_JOB/SPAGHETTIS"
         )
+
+
+def _box(name="OBJECT_A", vertices=((0.1, 0.1), (0.1, 0.3), (0.3, 0.3), (0.3, 0.1))):
+    return {
+        "categories": [{"name": name}],
+        "boundingPoly": [{"normalizedVertices": [{"x": x, "y": y} for x, y in vertices]}],
+        "type": "rectangle",
+    }
+
+
+VIDEO_JOBS = {
+    "JOB_0": {
+        "content": {"categories": {"OBJECT_A": {"children": [], "name": "A"}}, "input": "radio"},
+        "instruction": "",
+        "mlTask": "OBJECT_DETECTION",
+        "required": 1,
+        "tools": ["rectangle"],
+        "isChild": False,
+    }
+}
+
+
+def _video(folder: Path, external_id: str, frames: int, labelled: Sequence[int]):
+    paths = []
+    for i in range(frames):
+        path = folder / f"{external_id}_{i + 1}.jpg"
+        Image.new("RGB", (64, 48)).save(path)
+        paths.append(path)
+    return {
+        "externalId": external_id,
+        "content": "",
+        "jsonContent": paths,
+        "latestLabel": {
+            "jsonResponse": {
+                str(i): ({"JOB_0": {"annotations": [_box()]}} if i in labelled else {})
+                for i in range(frames)
+            }
+        },
+    }
+
+
+@pytest.mark.parametrize("merged", [True, False])
+def test_coco_video_keeps_the_frames_annotations_in_both_layouts(merged):
+    with TemporaryDirectory() as folder:
+        labels_json = convert_from_kili_to_coco_format(
+            jobs={"JOB_0": Job(**VIDEO_JOBS["JOB_0"])},
+            assets=[_video(Path(folder), "video", 3, labelled=[1, 2])],
+            title="test",
+            project_input_type="VIDEO",
+            annotation_modifier=None,
+            merged=merged,
+        )
+
+    assert len(labels_json["images"]) == 3
+    assert [annotation["image_id"] for annotation in labels_json["annotations"]] == [2, 3]
+
+
+def test_coco_video_numbers_the_frames_across_videos():
+    with TemporaryDirectory() as folder:
+        labels_json = convert_from_kili_to_coco_format(
+            jobs={"JOB_0": Job(**VIDEO_JOBS["JOB_0"])},
+            assets=[
+                _video(Path(folder), "first", 2, labelled=[0]),
+                _video(Path(folder), "second", 2, labelled=[0]),
+            ],
+            title="test",
+            project_input_type="VIDEO",
+            annotation_modifier=None,
+            merged=True,
+        )
+
+    image_ids = [image["id"] for image in labels_json["images"]]
+    assert len(set(image_ids)) == 4
+    files = {image["id"]: image["file_name"] for image in labels_json["images"]}
+    assert [files[a["image_id"]] for a in labels_json["annotations"]] == [
+        "data/first_1.jpg",
+        "data/second_1.jpg",
+    ]
+
+
+def test_coco_leaves_out_an_annotation_with_no_bounding_polygon():
+    """A point in a job that also has a box tool: the box is written, the point left out."""
+    with TemporaryDirectory() as folder:
+        path = Path(folder) / "image.jpg"
+        Image.new("RGB", (100, 100)).save(path)
+        point = {
+            "categories": [{"name": "OBJECT_A"}],
+            "point": {"x": 0.5, "y": 0.5},
+            "type": "marker",
+        }
+        labels_json = convert_from_kili_to_coco_format(
+            jobs={"JOB_0": Job(**{**VIDEO_JOBS["JOB_0"], "tools": ["rectangle", "marker"]})},
+            assets=[
+                {
+                    "externalId": "image",
+                    "content": str(path),
+                    "latestLabel": {"jsonResponse": {"JOB_0": {"annotations": [_box(), point]}}},
+                }
+            ],
+            title="test",
+            project_input_type="IMAGE",
+            annotation_modifier=None,
+            merged=True,
+        )
+
+    assert len(labels_json["annotations"]) == 1
+
+
+def test_coco_video_skips_asset_level_and_names_frames_as_saved(tmp_path):
+    frames = []
+    for index in range(3):
+        frame = tmp_path / f"vid_{index + 1}.jpg"
+        Image.new("RGB", (64, 48)).save(frame)
+        frames.append(str(frame))
+    box = {
+        "categories": [{"name": "A"}],
+        "type": "rectangle",
+        "boundingPoly": [
+            {
+                "normalizedVertices": [
+                    {"x": 0.1, "y": 0.2},
+                    {"x": 0.1, "y": 0.1},
+                    {"x": 0.2, "y": 0.1},
+                ]
+            }
+        ],
+    }
+    asset = {
+        "externalId": "vid",
+        "content": "",
+        "jsonContent": frames,
+        "latestLabel": {
+            "jsonResponse": {"0": {"JOB": {"annotations": [box]}}, "1": {}, "assetLevel": {}}
+        },
+    }
+    job = {
+        "mlTask": "OBJECT_DETECTION",
+        "tools": ["rectangle"],
+        "content": {"categories": {"A": {"name": "A"}}},
+    }
+
+    labels = convert_from_kili_to_coco_format(
+        {"JOB": job}, [asset], "t", "VIDEO", None, merged=True  # type: ignore
+    )
+
+    assert [image["file_name"] for image in labels["images"]] == [
+        "data/vid_1.jpg",
+        "data/vid_2.jpg",
+    ]
+
+
+def _image_job():
+    return {
+        "JOB": {
+            "mlTask": "OBJECT_DETECTION",
+            "tools": ["rectangle"],
+            "content": {"categories": {"OBJECT_A": {"name": "OBJECT_A"}}},
+        }
+    }
+
+
+def test_coco_names_an_image_in_a_subfolder_from_the_data_folder(tmp_path):
+    content = tmp_path / "data" / "dir" / "sub.jpg"
+    content.parent.mkdir(parents=True)
+    Image.new("RGB", (64, 48)).save(content)
+    asset = {
+        "externalId": "dir/sub",
+        "content": str(content),
+        "resolution": {"width": 64, "height": 48},
+        "latestLabel": {"jsonResponse": {"JOB": {"annotations": [_box()]}}},
+    }
+
+    labels = convert_from_kili_to_coco_format(
+        _image_job(), [asset], "t", "IMAGE", None, merged=True  # type: ignore
+    )
+
+    assert [image["file_name"] for image in labels["images"]] == ["data/dir/sub.jpg"]
+
+
+def test_coco_names_the_frames_of_a_video_in_a_subfolder_from_the_data_folder(tmp_path):
+    (tmp_path / "dir").mkdir()
+    asset = _video(tmp_path, "dir/clip", 2, labelled=[0])
+
+    labels = convert_from_kili_to_coco_format(
+        {"JOB_0": Job(**VIDEO_JOBS["JOB_0"])}, [asset], "t", "VIDEO", None, merged=True
+    )
+
+    assert [image["file_name"] for image in labels["images"]] == [
+        "data/dir/clip_1.jpg",
+        "data/dir/clip_2.jpg",
+    ]
+
+
+def test_coco_cuts_a_native_video_in_a_subfolder_into_the_data_folder(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    content = data / "dir" / "clip.mp4"
+    content.parent.mkdir(parents=True)
+    content.write_bytes(b"video")
+    cut_into = []
+
+    def cut_video(video_path, asset, leading_zeros, output_dir):
+        cut_into.append(output_dir)
+        frames = [output_dir / f"{asset['externalId']}_{index + 1}.jpg" for index in range(2)]
+        for frame in frames:
+            frame.write_bytes(b"frame")
+        return frames
+
+    monkeypatch.setattr(coco, "cut_video", cut_video)
+    monkeypatch.setattr(coco, "get_video_dimensions", lambda asset: (64, 48))
+    asset = {
+        "externalId": "dir/clip",
+        "content": str(content),
+        "jsonContent": "",
+        "latestLabel": {"jsonResponse": {"0": {"JOB_0": {"annotations": [_box()]}}, "1": {}}},
+    }
+
+    labels = convert_from_kili_to_coco_format(
+        {"JOB_0": Job(**VIDEO_JOBS["JOB_0"])}, [asset], "t", "VIDEO", None, merged=True
+    )
+
+    # Into the data folder, not the video's own: the frames' external id adds its `dir/`
+    assert cut_into == [data]
+    assert [image["file_name"] for image in labels["images"]] == [
+        "data/dir/clip_1.jpg",
+        "data/dir/clip_2.jpg",
+    ]
+    assert all((tmp_path / image["file_name"]).is_file() for image in labels["images"])

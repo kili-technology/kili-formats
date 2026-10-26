@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 from kili_formats.media.image import get_frame_dimensions, get_image_dimensions
 from kili_formats.media.video import cut_video, get_video_dimensions
 from kili_formats.tool.base import reverse_rotation_vertices
+from kili_formats.tool.naming import frame_indexes, frame_name, safe_path
 from kili_formats.types import Job
 
 from .types import (
@@ -179,9 +180,9 @@ def _get_images_and_annotation_for_images(
     for asset_i, asset in enumerate(assets):
         width, height = get_image_dimensions(asset)
         if Path(asset["content"]).is_file():
-            filename = str(DATA_SUBDIR + "/" + Path(asset["content"]).name)
+            filename = DATA_SUBDIR + "/" + _data_path(Path(asset["content"]), asset["externalId"])
         else:
-            filename = str(DATA_SUBDIR + "/" + asset["externalId"])
+            filename = DATA_SUBDIR + "/" + safe_path(asset["externalId"])
         coco_image = CocoImage(
             id=asset_i,
             license=0,
@@ -239,67 +240,75 @@ def _get_images_and_annotation_for_videos(
     coco_images = []
     coco_annotations = []
     annotation_offset = 0
+    # Every frame of every video is an image of its own, numbered across the videos
+    image_id = len(assets)
+
+    # A native video is cut once, whichever labels of it the assets hold
+    cut_frames: Dict[str, List[Path]] = {}
 
     for asset in assets:
-        nbr_frames = len(asset.get("latestLabel", {}).get("jsonResponse", {}))
-        leading_zeros = len(str(nbr_frames))
-
         width = height = 0
-        frame_ext = ""
         # jsonContent with frames
-        if isinstance(asset["jsonContent"], list) and Path(asset["jsonContent"][0]).is_file():
+        if (
+            isinstance(asset["jsonContent"], list)
+            and asset["jsonContent"]
+            and Path(asset["jsonContent"][0]).is_file()
+        ):
             width, height = get_frame_dimensions(asset)
-            frame_ext = Path(asset["jsonContent"][0]).suffix
+            frame_files = [
+                _data_path(Path(path), asset["externalId"]) for path in asset["jsonContent"]
+            ]
 
         # video with shouldUseNativeVideo set to True (no frames available)
         elif Path(asset["content"]).is_file():
             width, height = get_video_dimensions(asset)
-            cut_video(asset["content"], asset, leading_zeros, Path(asset["content"]).parent)
-            frame_ext = ".jpg"
+            if asset["content"] not in cut_frames:
+                cut_frames[asset["content"]] = cut_video(
+                    Path(asset["content"]),
+                    asset,
+                    0,
+                    _data_folder(Path(asset["content"]), asset["externalId"]),
+                )
+            frame_files = [
+                _data_path(path, asset["externalId"]) for path in cut_frames[asset["content"]]
+            ]
 
         else:
             raise FileNotFoundError(f"Could not find frames or video for asset {asset}")
 
-        for frame_i, (frame_id, json_response) in enumerate(
-            asset["latestLabel"]["jsonResponse"].items()
-        ):
-            frame_name = f"{asset['externalId']}_{str(int(frame_id) + 1).zfill(leading_zeros)}"
+        # Every frame of the label, `assetLevel` aside, the image of the file it was saved as
+        label_response = asset["latestLabel"].get("jsonResponse") or {}
+        for frame in frame_indexes(label_response):
+            json_response = label_response.get(str(frame), label_response.get(frame)) or {}  # type: ignore
             coco_image = CocoImage(
-                id=frame_i + len(assets),  # add offset to avoid duplicate ids
+                id=image_id,
                 license=0,
-                file_name=str(DATA_SUBDIR + "/" + f"{frame_name}{frame_ext}"),
+                file_name=str(
+                    DATA_SUBDIR
+                    + "/"
+                    + (
+                        frame_files[frame]
+                        if frame < len(frame_files)
+                        else f"{frame_name(asset['externalId'], frame, len(frame_files))}.jpg"
+                    )
+                ),
                 height=height,
                 width=width,
                 date_captured=None,
             )
             coco_images.append(coco_image)
-            if is_single_job:
-                job_name = next(iter(jobs.keys()))
-                if job_name not in json_response:
-                    coco_img_annotations = []
-                    # annotation offset is unchanged
-                else:
-                    coco_img_annotations, annotation_offset = _get_coco_image_annotations(
-                        json_response[job_name]["annotations"],
-                        cat_kili_id_to_coco_id[job_name],
-                        annotation_offset,
-                        coco_image,
-                        annotation_modifier,
-                    )
+            image_id += 1
+            for job_name in jobs:
+                if job_name not in json_response or "annotations" not in json_response[job_name]:
+                    continue
+                coco_img_annotations, annotation_offset = _get_coco_image_annotations(
+                    json_response[job_name]["annotations"],
+                    cat_kili_id_to_coco_id[job_name],
+                    annotation_offset,
+                    coco_image,
+                    annotation_modifier,
+                )
                 coco_annotations.extend(coco_img_annotations)
-            else:
-                for job_name in jobs:
-                    if job_name not in asset["latestLabel"]["jsonResponse"]:
-                        continue
-                    coco_img_annotations, annotation_offset = _get_coco_image_annotations(
-                        json_response[job_name]["annotations"],
-                        cat_kili_id_to_coco_id[job_name],
-                        annotation_offset,
-                        coco_image,
-                        annotation_modifier,
-                    )
-
-                    coco_annotations.extend(coco_img_annotations)
 
     return coco_images, coco_annotations
 
@@ -319,10 +328,10 @@ def _get_coco_image_annotations(
     for annotation in annotations_:  # we do not use enumerate as some annotations may be empty
         annotation_j += 1
 
-        if not annotation:
-            print("continue")
+        # A point, a line or a pose has no bounding polygon: nothing COCO can write
+        bounding_poly = (annotation or {}).get("boundingPoly") or [{}]
+        if "normalizedVertices" not in bounding_poly[0]:
             continue
-        bounding_poly = annotation["boundingPoly"]
         area, bbox, polygons = _get_coco_geometry_from_kili_bpoly(
             bounding_poly, coco_image["width"], coco_image["height"], rotation
         )
@@ -422,3 +431,17 @@ def _get_shoelace_area(x: List[float], y: List[float]):
         area += 0.5 * np.abs(np.dot(p_x, np.roll(p_y, 1)) - np.dot(p_y, np.roll(p_x, 1)))
 
     return area
+
+
+def _data_folder(path: Path, external_id: str) -> Path:
+    """The folder the media of the asset `external_id` were saved in, from the path of one of them:
+    a media named after an external id holding a slash is in its subfolder."""
+    folders = safe_path(external_id).split("/")[:-1]
+    if folders and list(path.parent.parts[-len(folders) :]) == folders:
+        return path.parents[len(folders)]
+    return path.parent
+
+
+def _data_path(path: Path, external_id: str) -> str:
+    """The path of an asset's media from the folder it was saved in, as `file_name` gives it."""
+    return path.relative_to(_data_folder(path, external_id)).as_posix()
