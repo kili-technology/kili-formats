@@ -20,13 +20,14 @@ from kili_formats.format.yolo import (
 from kili_formats.tool.naming import frame_indexes, frame_name, safe_path
 from kili_formats.types import Job, JobCategory, JobTool, YoloTask
 
-# The formats laid out here, named as the SDK names them. The app's YOLO format, "YOLO v5 to
-# YOLO26", writes yolo_v8's files.
-LayoutFormat = Literal["coco", "pascal_voc", "yolo_v4", "yolo_v5", "yolo_v7", "yolo_v8"]
+# The formats laid out here, named as the SDK names them. "yolo" is the YOLO format, the
+# Ultralytics dataset the Kili app and the SDK export. "yolo_v4" to "yolo_v8" are the SDK's
+# deprecated YOLO formats, kept for it until it drops them: "yolo_v8" writes the files of "yolo".
+LayoutFormat = Literal["coco", "pascal_voc", "yolo", "yolo_v4", "yolo_v5", "yolo_v7", "yolo_v8"]
 
-# How a YOLO v5, v7 or v8 export writes the bounding boxes: "box", the upright box around each,
-# for the detect task; "obb", their four corners, for the obb task; "polygon", their four corners,
-# in the segment task
+# How a YOLO export (and the deprecated YOLO v5, v7 and v8) writes the bounding boxes: "box", the
+# upright box around each, for the detect task; "obb", their four corners, for the obb task;
+# "polygon", their four corners, in the segment task
 YoloBoundingBoxes = Literal["box", "obb", "polygon"]
 
 BOX_TOOLS = (JobTool.RECTANGLE,)
@@ -37,6 +38,7 @@ SHAPE_TOOLS = BOX_TOOLS + SEGMENT_TOOLS
 _FORMAT_TOOLS: Dict[str, Tuple[JobTool, ...]] = {
     "coco": SHAPE_TOOLS,
     "pascal_voc": BOX_TOOLS,
+    "yolo": SHAPE_TOOLS,
     "yolo_v4": BOX_TOOLS,
     "yolo_v5": SHAPE_TOOLS,
     "yolo_v7": SHAPE_TOOLS,
@@ -387,7 +389,7 @@ def yolo_class_file(folder: YoloFolder, label_format: LayoutFormat) -> Tuple[str
         return "data.yaml", images + "names:\n" + "".join(
             f"  {index}: {json.dumps(name)}\n" for index, name in enumerate(names)
         )
-    if label_format in ("yolo_v7", "yolo_v8"):
+    if label_format in ("yolo", "yolo_v7", "yolo_v8"):
         quoted = ", ".join(json.dumps(name) for name in names)
         return "data.yaml", f"{images}nc: {len(names)}\nnames: [{quoted}]\n"
     raise ValueError(f"Unknown YOLO format: {label_format}")
