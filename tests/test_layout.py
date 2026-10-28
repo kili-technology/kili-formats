@@ -75,6 +75,7 @@ RESPONSE = {"BOX_JOB": {"annotations": [BOX]}, "POLYGON_JOB": {"annotations": [T
     [
         ("coco", ["BOX_JOB", "POLYGON_JOB", "MASK_JOB"]),
         ("pascal_voc", ["BOX_JOB"]),
+        ("yolo", ["BOX_JOB", "POLYGON_JOB", "MASK_JOB"]),
         ("yolo_v4", ["BOX_JOB"]),
         ("yolo_v8", ["BOX_JOB", "POLYGON_JOB", "MASK_JOB"]),
     ],
@@ -208,14 +209,26 @@ def test_an_annotation_without_a_type_takes_its_job_single_shape_tool():
 @pytest.mark.parametrize(
     ("label_format", "bounding_boxes", "tasks"),
     [
-        ("yolo_v8", "box", ["detect", "segment"]),
+        ("yolo", "box", ["detect", "segment"]),
+        ("yolo", "obb", ["obb", "segment"]),
+        ("yolo", "polygon", ["segment"]),
         ("yolo_v8", "obb", ["obb", "segment"]),
-        ("yolo_v8", "polygon", ["segment"]),
         ("yolo_v4", "obb", ["detect"]),
     ],
 )
 def test_a_yolo_export_writes_the_boxes_task_then_segment(label_format, bounding_boxes, tasks):
     assert yolo_tasks(INTERFACE, label_format, bounding_boxes) == tasks
+
+
+@pytest.mark.parametrize("split", [False, True])
+@pytest.mark.parametrize("bounding_boxes", ["box", "obb", "polygon"])
+def test_yolo_lays_out_the_files_of_the_deprecated_yolo_v8(split, bounding_boxes):
+    folders = yolo_folders(INTERFACE, "yolo", split=split, bounding_boxes=bounding_boxes)
+
+    assert folders == yolo_folders(INTERFACE, "yolo_v8", split=split, bounding_boxes=bounding_boxes)
+    assert [yolo_class_file(folder, "yolo") for folder in folders.values()] == [
+        yolo_class_file(folder, "yolo_v8") for folder in folders.values()
+    ]
 
 
 def test_a_merged_yolo_export_writes_a_folder_per_task():
@@ -272,6 +285,15 @@ CATEGORIES = {
 @pytest.mark.parametrize(
     ("label_format", "with_job", "class_file"),
     [
+        (
+            "yolo",
+            True,
+            (
+                "data.yaml",
+                'train: images\nval: images\nnc: 2\nnames: ["BOX_JOB/A", "POLYGON_JOB/C"]\n',
+            ),
+        ),
+        ("yolo", False, ("data.yaml", 'train: images\nval: images\nnc: 2\nnames: ["A", "C"]\n')),
         ("yolo_v4", True, ("classes.txt", "0 BOX_JOB/A\n1 POLYGON_JOB/C\n")),
         (
             "yolo_v5",
