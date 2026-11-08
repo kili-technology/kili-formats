@@ -17,3 +17,6 @@ launch.json
 .coverage
 .coverage.*
 cov.xml
+
+CLAUDE.local.md
+.claude/settings.local.json
