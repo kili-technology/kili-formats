@@ -218,3 +218,47 @@ pdf_project_asset_unnormalized = {
         {"pageNumber": 2, "height": 842, "width": 595, "rotation": 0},
     ],
 }
+
+
+def rectangle(x_0: float, y_0: float, x_1: float, y_1: float):
+    """The four vertices of a rectangle, as the backend writes them."""
+    return [{"x": x_0, "y": y_1}, {"x": x_0, "y": y_0}, {"x": x_1, "y": y_0}, {"x": x_1, "y": y_1}]
+
+
+def pdf_asset_with_entities(entities, page_resolutions):
+    """A PDF asset labelled with one entity per item of `entities`, in the backend's shape.
+
+    Each item is (polys rings, pageNumberArray, boundingPoly rings, boundingPolyPageNumberArray).
+    """
+    return {
+        "latestLabel": {
+            "jsonResponse": {
+                "OBJECT_DETECTION_JOB": {
+                    "annotations": [
+                        {
+                            "annotations": [
+                                {
+                                    "boundingPoly": [{"normalizedVertices": bounding_rings}],
+                                    "boundingPolyPageNumberArray": bounding_page_numbers,
+                                    "pageNumberArray": page_numbers,
+                                    "polys": [{"normalizedVertices": rings}],
+                                }
+                            ],
+                            "categories": [{"name": "A"}],
+                            "children": {},
+                            "content": "",
+                            "mid": f"entity-{index}",
+                            "type": "rectangle",
+                        }
+                        for index, (
+                            rings,
+                            page_numbers,
+                            bounding_rings,
+                            bounding_page_numbers,
+                        ) in enumerate(entities)
+                    ]
+                }
+            },
+        },
+        "pageResolutions": page_resolutions,
+    }
