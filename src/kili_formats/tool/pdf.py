@@ -23,7 +23,8 @@ def scale_normalized_vertices_pdf_annotation(annotation: Dict, asset: Dict, **kw
         for ann in annotation["annotations"]:
             scale_normalized_vertices_pdf_annotation(ann, asset, **kwargs)
 
-    # The k-th ring of polys[0].normalizedVertices is on page pageNumberArray[k];
+    # The k-th ring of polys[0].normalizedVertices is on page pageNumberArray[k], else on the
+    # oldest labels' scalar pageNumber, else on page 1, as the backend reads it;
     # boundingPoly pairs its rings with boundingPolyPageNumberArray the same way.
     if "polys" in annotation and "boundingPoly" in annotation:
         page_sizes = {
@@ -31,33 +32,38 @@ def scale_normalized_vertices_pdf_annotation(annotation: Dict, asset: Dict, **kw
             for page_resolution in asset.get("pageResolutions") or []
         }
         page_numbers = annotation.get("pageNumberArray") or []
-        _scale_polygons(annotation["polys"], page_numbers, page_sizes)
+        default_page = annotation.get("pageNumber") or 1
+        _scale_polygons(annotation["polys"], page_numbers, default_page, page_sizes)
         _scale_polygons(
             annotation["boundingPoly"],
             annotation.get("boundingPolyPageNumberArray") or page_numbers,
+            default_page,
             page_sizes,
         )
 
 
 def _scale_polygons(
-    polygons: List[Dict], page_numbers: List[int], page_sizes: Dict[int, Tuple[int, int]]
+    polygons: List[Dict],
+    page_numbers: List[int],
+    default_page: int,
+    page_sizes: Dict[int, Tuple[int, int]],
 ) -> None:
     """Add pixel `vertices` to each polygon whose rings all lie on a page of known size.
 
     A polygon's normalizedVertices is a list of rings, or a single ring. Rings are paired with
-    page_numbers by index, across the polygons.
+    page_numbers by index, across the polygons; a ring past its end is on default_page.
     """
     ring_index = 0
     for polygon in polygons:
         normalized_vertices = polygon["normalizedVertices"]
         is_single_ring = not normalized_vertices or isinstance(normalized_vertices[0], dict)
         rings = [normalized_vertices] if is_single_ring else normalized_vertices
-        sizes = [
-            page_sizes[page_number]
-            for page_number in page_numbers[ring_index : ring_index + len(rings)]
-            if page_number in page_sizes
+        pages = [
+            page_numbers[index] if index < len(page_numbers) else default_page
+            for index in range(ring_index, ring_index + len(rings))
         ]
         ring_index += len(rings)
+        sizes = [page_sizes[page] for page in pages if page in page_sizes]
         if len(sizes) < len(rings):
             continue
         vertices = [

@@ -18,6 +18,7 @@ from .fakes.pdf import (
     pdf_asset,
     pdf_asset_rotated,
     pdf_asset_with_entities,
+    pdf_asset_with_fragments,
     pdf_project,
     pdf_project_asset_unnormalized,
     rectangle,
@@ -115,6 +116,48 @@ def test_kili_convert_to_pixel_coords_pdf_on_a_page_without_size():
     for fragment in (on_page_2, on_both_pages):
         assert "vertices" not in fragment["polys"][0]
         assert "vertices" not in fragment["boundingPoly"][0]
+
+
+def test_kili_convert_to_pixel_coords_pdf_older_fragments():
+    """Older fragments: one flat ring per polygon, a scalar pageNumber, or a short page array."""
+    on_page_1 = rectangle(0.25, 0.75, 0.5, 0.875)
+    on_page_2 = rectangle(0.25, 0.125, 0.5, 0.25)
+    asset = pdf_asset_with_fragments(
+        [
+            {
+                "boundingPoly": [
+                    {"normalizedVertices": on_page_1},
+                    {"normalizedVertices": on_page_2},
+                ],
+                "pageNumberArray": [1, 2],
+                "polys": [{"normalizedVertices": on_page_1}, {"normalizedVertices": on_page_2}],
+            },
+            {
+                "boundingPoly": [{"normalizedVertices": [on_page_2]}],
+                "pageNumber": 2,
+                "polys": [{"normalizedVertices": [on_page_2]}],
+            },
+            {
+                "boundingPoly": [{"normalizedVertices": [on_page_1]}],
+                "polys": [{"normalizedVertices": [on_page_1, on_page_1]}],
+                "pageNumberArray": [2],
+            },
+        ],
+        _PAGE_RESOLUTIONS,
+    )
+
+    convert_to_pixel_coords(asset, pdf_project)
+
+    one_ring_per_polygon, scalar_page_number, short_page_array = _pdf_fragments(asset)
+    assert [polygon["vertices"] for polygon in one_ring_per_polygon["polys"]] == [
+        rectangle(150, 600, 300, 700),
+        rectangle(250, 250, 500, 500),
+    ]
+    assert scalar_page_number["polys"][0]["vertices"] == [rectangle(250, 250, 500, 500)]
+    assert short_page_array["polys"][0]["vertices"] == [
+        rectangle(250, 1500, 500, 1750),
+        rectangle(150, 600, 300, 700),
+    ]
 
 
 def test_kili_convert_to_pixel_coords_text():
