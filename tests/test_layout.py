@@ -1,21 +1,29 @@
+import json
 from datetime import datetime
 
 import pytest
 
 from kili_formats.layout import (
+    ONTOLOGY_MANIFEST_FILE,
     LabelFile,
+    OntologyVersions,
     YoloFolder,
     asset_label_files,
     exported_jobs,
     frame_name,
     image_filename,
+    keep_labels_of_version,
     label_frame_count,
     label_suffix,
     labels_of,
     one_asset_per_label,
+    ontology_file,
+    ontology_manifest,
+    ontology_snapshot,
     readme,
     video_metadata,
     with_annotation_types,
+    write_ontology_versions,
     yolo_class_file,
     yolo_folders,
     yolo_label_file,
@@ -373,3 +381,126 @@ def test_the_readme_of_a_project_with_no_description_leaves_it_empty():
     project = {"title": "Cars", "id": "p1", "description": None}
 
     assert "- Project description: \n" in readme(project, "yolo_v8", "latest")
+
+
+def _label(version, **extra):
+    return {"jsonResponse": {}, "recordedOntologyVersion": version, **extra}
+
+
+def test_the_ontology_files_and_their_manifest_share_a_folder():
+    assert ontology_file(3) == "ontologies/ontology_v3.json"
+    assert ONTOLOGY_MANIFEST_FILE == "ontologies/manifest.json"
+
+
+def test_keeping_the_labels_of_a_version_leaves_out_the_others_whichever_way_they_were_fetched():
+    asset = {
+        "latestLabel": _label(1),
+        "latestLabels": [_label(2, id="kept"), _label(1), None],
+        "labels": [_label(None), _label(2, id="kept too")],
+    }
+
+    assert keep_labels_of_version(asset, 2) is True
+
+    assert asset["latestLabel"] is None
+    assert [label["id"] for label in asset["latestLabels"]] == ["kept"]
+    assert [label["id"] for label in asset["labels"]] == ["kept too"]
+
+
+def test_keeping_the_labels_of_a_version_says_when_an_asset_has_none_left():
+    made_before_versioning = {"latestLabel": _label(None)}
+    on_another_version = {"labels": [_label(1)]}
+    with_no_label = {"latestLabel": None, "latestLabels": None}
+
+    assert keep_labels_of_version(made_before_versioning, 1) is False
+    assert keep_labels_of_version(on_another_version, 2) is False
+    assert keep_labels_of_version(with_no_label, 1) is False
+    assert made_before_versioning["latestLabel"] is None
+    assert on_another_version["labels"] == []
+    assert with_no_label["latestLabels"] is None
+
+
+def test_keeping_the_labels_of_a_version_keeps_a_latest_label_made_with_it():
+    asset = {"latestLabel": _label(2)}
+
+    assert keep_labels_of_version(asset, 2) is True
+    assert asset["latestLabel"] == _label(2)
+
+
+def test_a_label_is_exported_with_its_ontology_version_and_with_none_before_versioning():
+    asset = {
+        "latestLabel": _label(2),
+        "latestLabels": [_label(None), None],
+        "labels": [{"jsonResponse": {}}],
+    }
+
+    write_ontology_versions(asset)
+
+    assert asset["latestLabel"] == {"jsonResponse": {}, "ontologyVersion": 2}
+    assert asset["latestLabels"] == [{"jsonResponse": {}, "ontologyVersion": None}, None]
+    assert asset["labels"] == [{"jsonResponse": {}, "ontologyVersion": None}]
+
+
+def test_writing_the_ontology_versions_twice_keeps_them():
+    asset = {"latestLabel": _label(2), "labels": None}
+
+    write_ontology_versions(asset)
+    write_ontology_versions(asset)
+
+    assert asset["latestLabel"]["ontologyVersion"] == 2
+
+
+def test_the_ontology_versions_count_the_labels_of_each_and_those_made_before_versioning():
+    versions = OntologyVersions()
+
+    versions.add({"latestLabel": _label(3), "labels": [_label(1), _label(3), _label(None)]})
+    versions.add({"latestLabels": [_label(1), None]})
+    versions.add({"latestLabel": None})
+
+    assert versions.labels == {3: 2, 1: 2}
+    assert versions.numbers == [1, 3]
+    assert versions.pre_versioning_labels == 1
+
+
+def test_the_manifest_lists_the_versions_the_current_one_and_the_labels_without_a_version():
+    versions = OntologyVersions()
+    versions.add({"labels": [_label(3), _label(1), _label(1), _label(None)]})
+
+    assert json.loads(ontology_manifest(versions, 4)) == {
+        "currentVersion": 4,
+        "ontologyVersionFilter": "all",
+        "versions": [
+            {"version": 1, "labels": 2, "ontology": "ontologies/ontology_v1.json"},
+            {"version": 3, "labels": 1, "ontology": "ontologies/ontology_v3.json"},
+        ],
+        "preVersioningLabels": 1,
+    }
+
+
+def test_the_manifest_of_an_export_of_the_current_version_says_so():
+    versions = OntologyVersions()
+    versions.add({"latestLabel": _label(4)})
+
+    manifest = json.loads(ontology_manifest(versions, 4, "current"))
+
+    assert manifest["ontologyVersionFilter"] == "current"
+    assert [version["version"] for version in manifest["versions"]] == [4]
+
+
+def test_the_manifest_of_an_export_with_no_label_lists_no_version():
+    manifest = json.loads(ontology_manifest(OntologyVersions(), 2, "current"))
+
+    assert manifest["versions"] == []
+    assert manifest["preVersioningLabels"] == 0
+
+
+@pytest.mark.parametrize(
+    "interface",
+    [
+        '{"jobs": {"JOB": {"mlTask": "CLASSIFICATION"}}}',
+        {"jobs": {"JOB": {"mlTask": "CLASSIFICATION"}}},
+    ],
+)
+def test_an_ontology_file_holds_the_interface_whether_fetched_as_a_string_or_parsed(interface):
+    assert json.loads(ontology_snapshot(interface)) == {
+        "jobs": {"JOB": {"mlTask": "CLASSIFICATION"}}
+    }

@@ -1,6 +1,6 @@
 """The layout of an export: which jobs a format takes, which labels and frames of an asset it
-writes and under which names, the YOLO datasets with their class and label files, and the files
-beside them.
+writes and under which names, the YOLO datasets with their class and label files, the ontology
+versions its labels were made with, and the files beside them.
 
 The export service and the SDK both lay their exports out with these, so that they write the same
 files; each only fetches the assets, downloads their media and writes what these return. This
@@ -11,7 +11,7 @@ import json
 import mimetypes
 from datetime import datetime
 from pathlib import PurePosixPath
-from typing import Dict, List, Literal, NamedTuple, Optional, Sequence, Tuple
+from typing import Dict, List, Literal, NamedTuple, Optional, Sequence, Tuple, Union
 
 from kili_formats.format.yolo import (
     convert_from_kili_to_yolo_format,
@@ -265,6 +265,113 @@ def readme(
         f"- Export date: {(date or datetime.now()).strftime(r'%Y%m%d-%H%M%S')}\n"
         f"- Exported format: {label_format}\n"
         f"- Exported labels: {export_type}\n" + "".join(f"\n{note}\n" for note in notes)
+    )
+
+
+# An export of a project with ontology versions writes, in a folder of its own, the ontology of each
+# version its labels were made with and a manifest of them
+ONTOLOGIES_FOLDER = "ontologies"
+ONTOLOGY_MANIFEST_FILE = f"{ONTOLOGIES_FOLDER}/manifest.json"
+# The label field the API gives the version in, and the one an export in the Kili format writes
+RECORDED_ONTOLOGY_VERSION_FIELD = "recordedOntologyVersion"
+ONTOLOGY_VERSION_FIELD = "ontologyVersion"
+
+# The labels an export writes: those of every ontology version, or of the project's current one
+OntologyVersionFilter = Literal["all", "current"]
+
+_LABEL_LISTS = ("latestLabels", "labels")
+
+
+def ontology_file(number: int) -> str:
+    """The file an export writes the ontology of version `number` to, from the archive's root."""
+    return f"{ONTOLOGIES_FOLDER}/ontology_v{number}.json"
+
+
+def label_ontology_version(label: Dict) -> Optional[int]:
+    """The ontology version a fetched label was made with: none for a label made before ontology
+    versioning."""
+    return label.get(RECORDED_ONTOLOGY_VERSION_FIELD)
+
+
+def keep_labels_of_version(asset: Dict, number: int) -> bool:
+    """Leaves out of the asset, in place, the labels made with another ontology version than
+    `number`, those made before versioning included. Whether a label is left to export."""
+    latest = asset.get("latestLabel")
+    if latest is not None and label_ontology_version(latest) != number:
+        asset["latestLabel"] = None
+    for field in _LABEL_LISTS:
+        if asset.get(field) is not None:
+            asset[field] = [
+                label
+                for label in asset[field]
+                if label is not None and label_ontology_version(label) == number
+            ]
+    return bool(labels_of(asset))
+
+
+def write_ontology_versions(asset: Dict) -> None:
+    """Names, in place, the ontology version of each label of the asset as an export in the Kili
+    format writes it: `ontologyVersion`, null for a label made before versioning."""
+    holders = [asset.get("latestLabel"), *(asset.get("latestLabels") or [])]
+    for label in [*holders, *(asset.get("labels") or [])]:
+        if label is not None and ONTOLOGY_VERSION_FIELD not in label:
+            label[ONTOLOGY_VERSION_FIELD] = label.pop(RECORDED_ONTOLOGY_VERSION_FIELD, None)
+
+
+class OntologyVersions:
+    """The ontology versions of the labels an export writes: how many labels each was used for,
+    and how many labels were made before ontology versioning."""
+
+    def __init__(self) -> None:
+        self.labels: Dict[int, int] = {}
+        self.pre_versioning_labels = 0
+
+    def add(self, asset: Dict) -> None:
+        """Counts the labels of an asset the export writes."""
+        for label in labels_of(asset):
+            number = label_ontology_version(label)
+            if number is None:
+                self.pre_versioning_labels += 1
+            else:
+                self.labels[number] = self.labels.get(number, 0) + 1
+
+    @property
+    def numbers(self) -> List[int]:
+        """The versions used, oldest first: those an export writes the ontology of."""
+        return sorted(self.labels)
+
+
+def ontology_snapshot(json_interface: Union[str, Dict]) -> str:
+    """The content of a version's ontology file: its interface as saved, whether the API gave it
+    as a string or parsed."""
+    interface = json.loads(json_interface) if isinstance(json_interface, str) else json_interface
+    return json.dumps(interface, indent=4)
+
+
+def ontology_manifest(
+    versions: OntologyVersions,
+    current_version: int,
+    version_filter: OntologyVersionFilter = "all",
+) -> str:
+    """The content of the manifest of an export's ontology versions: the project's current
+    version, whether the export kept the labels of the current version only, each version its
+    labels were made with, with its number of labels and its ontology file, and the number of
+    labels made before versioning, which have no version."""
+    return json.dumps(
+        {
+            "currentVersion": current_version,
+            "ontologyVersionFilter": version_filter,
+            "versions": [
+                {
+                    "version": number,
+                    "labels": versions.labels[number],
+                    "ontology": ontology_file(number),
+                }
+                for number in versions.numbers
+            ],
+            "preVersioningLabels": versions.pre_versioning_labels,
+        },
+        indent=4,
     )
 
 
