@@ -2,7 +2,7 @@
 
 ## Set up the Development environment
 
-To install the development environment, please follow these steps, preferably in a Python 3.8 virtual environment.
+To install the development environment, please follow these steps, preferably in a Python 3.10 virtual environment.
 
 ```bash
 pip install -e ".[dev]"
@@ -13,6 +13,7 @@ pre-commit run --all-files
 ## Building
 
 ```bash
+pip install build
 python -m build
 ```
 
@@ -29,10 +30,11 @@ to run all tests, simply run `pytest tests`
 
 ## Linting
 
-The repository has pylint as linter. To run pylint checks, execute:
+`pre-commit` runs Ruff, pyupgrade, isort and Black. Pylint (which must score 10.00/10) and Pyright run in CI only:
 
 ```bash
-pylint src
+pylint --rcfile=.pylintrc src/kili_formats
+pyright src
 ```
 
 ## PR names
